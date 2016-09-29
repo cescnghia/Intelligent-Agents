@@ -1,4 +1,5 @@
 import uchicago.src.reflector.RangePropertyDescriptor;
+import uchicago.src.sim.analysis.NumericDataSource;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.analysis.Sequence;
 import uchicago.src.sim.engine.Schedule;
@@ -176,6 +177,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			
 			graph.addSequence("Agent Count", new AgentCount());
 			graph.addSequence("Grass Count", new GrassCount());
+			
 		}
 		
 		private boolean addNewAgent(){
@@ -240,43 +242,27 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}	
 		
 		
-		class AgentCount implements DataSource, Sequence {
+		class AgentCount implements Sequence {
 
 			public Object execute(){
 				return new Double(getSValue());
 			}
-			
+	
 			@Override
 			public double getSValue() {
 				return agentList.size();
 			}
-
-			@Override
-			public String getContentType() { return null; }
-			@Override
-			public InputStream getInputStream() throws IOException { return null; }
-			@Override
-			public String getName() { return null;}
-			@Override
-			public OutputStream getOutputStream() throws IOException { return null; }
-			
 		}
 		
-		class GrassCount implements DataSource, Sequence {
-	        public Object execute() {
+		class GrassCount implements Sequence {
+			
+			public Object execute() {
 	            return new Double(getSValue());
 	        }
+			
 	        @Override
 	        public double getSValue() {
 	            return (double)rgsSpace.getTotalGrass();
 	        }
-			@Override
-			public String getContentType() { return null;}
-			@Override
-			public InputStream getInputStream() throws IOException { return null; }
-			@Override
-			public String getName() { return null; }
-			@Override
-			public OutputStream getOutputStream() throws IOException { return null;}
 	    }
 }
