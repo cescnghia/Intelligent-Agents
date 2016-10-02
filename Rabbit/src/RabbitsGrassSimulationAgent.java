@@ -9,6 +9,8 @@ import uchicago.src.sim.gui.SimGraphics;
  * Class that specify the agents
 
  * @author
+ * Stephane Cayssials (272048)
+ * Anh Nghia Khau (223613)
  */
 
 public class RabbitsGrassSimulationAgent  implements Drawable {
@@ -20,13 +22,24 @@ public class RabbitsGrassSimulationAgent  implements Drawable {
 	private static int COUNTER = 0;
 	RabbitsGrassSimulationSpace rgsSpace;
 	
+	/**
+	 * Create an agent with a unique ID via a static variable COUNTER 
+	 * 
+	 * @param x: position of this agent on x-axis
+	 * @param y: position of this agent on y-axis
+	 * @param energy: number of energy
+	 */
+	
 	public RabbitsGrassSimulationAgent(int x, int y, int energy){
 		this.x = x;
 		this.y = y;
 		this.energy = energy;
 		this.id = COUNTER++;
 	}
-
+	
+	/**
+	 * Form of an agent  
+	 */
 	public void draw(SimGraphics g) {
 		g.drawCircle(Color.white);	
 	}
@@ -51,17 +64,27 @@ public class RabbitsGrassSimulationAgent  implements Drawable {
 		this.rgsSpace = space;
 	}
 	
-
+	/**
+	 * First we find all possibilities that agent can move and after choose direction randomly,
+	 *  then move agent to new cell and he can earn some energy if he find some grass.
+	 * Agent will not move if all four cell (NEWS) are occupied. 
+	 * We supposed that for each move, agent loses one unit of energy.(If not, agent has never died).
+	 */
+	
 	public void move(){
-		
+		int xSize = rgsSpace.getXSize();
+		int ySize = rgsSpace.getYSize();
+
+		// Check for all neighbor that agent can go
+		// Attention with java: -13 modulo 15 = -13 !!!! 
 		ArrayList<String> toGo = new ArrayList<String>();
-		if (! rgsSpace.isCellOccupied(x+1,y))
+		if (! rgsSpace.isCellOccupied((x+1)%xSize,y))
 			toGo.add("East");
-		if (! rgsSpace.isCellOccupied(x-1,y))
+		if (! rgsSpace.isCellOccupied((x-1+xSize)%xSize,y))
 			toGo.add("West");
-		if (! rgsSpace.isCellOccupied(x,y+1))
+		if (! rgsSpace.isCellOccupied(x,(y+1)%ySize))
 			toGo.add("North");
-		if (! rgsSpace.isCellOccupied(x,y-1))
+		if (! rgsSpace.isCellOccupied(x,((y-1+ySize)%ySize)))
 			toGo.add("South");
 		
 		int newX = x, newY = y;
@@ -77,8 +100,9 @@ public class RabbitsGrassSimulationAgent  implements Drawable {
 			} else {
 				newY -= 1;
 			}
-			newX = (newX +(rgsSpace.getCurrentAgentSpace().getSizeX())) % rgsSpace.getCurrentAgentSpace().getSizeX() ;
-			newY = (newY +(rgsSpace.getCurrentAgentSpace().getSizeY())) % rgsSpace.getCurrentAgentSpace().getSizeY() ;
+			// Torus
+			newX = (newX + xSize) % xSize;
+			newY = (newY + ySize) % ySize;
 			
 			rgsSpace.moveAgent(x, y, newX, newY);
 			this.addEnergy(rgsSpace.getAndEatGrass(x, y));
@@ -87,6 +111,11 @@ public class RabbitsGrassSimulationAgent  implements Drawable {
 		}
 	}
 	
+	/**
+	 * When an agent reproduces, he has to share a half of his energy for his child, then we create a new child and try to add it into rgsSpace.
+	 * 
+	 * @return a RabbitsGrassSimulationAgent if we can put the child into rgsSpace, null otherwise.
+	 */
 	public RabbitsGrassSimulationAgent reproduce(){
 			int sharedEnergy = this.energy/2;
 			this.energy -= sharedEnergy;
@@ -95,8 +124,6 @@ public class RabbitsGrassSimulationAgent  implements Drawable {
 			if (rgsSpace.addAgentIntoSpace(child))
 				return child;
 			else 
-				return null;
-			
+				return null;	
 	}
-
 }

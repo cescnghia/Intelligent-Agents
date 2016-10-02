@@ -1,5 +1,4 @@
 import uchicago.src.reflector.RangePropertyDescriptor;
-import uchicago.src.sim.analysis.NumericDataSource;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.analysis.Sequence;
 import uchicago.src.sim.engine.Schedule;
@@ -13,12 +12,8 @@ import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.util.SimUtilities;
 
 import java.awt.Color;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 
-import javax.activation.DataSource;
 
 /**
  * Class that implements the simulation model for the rabbits grass
@@ -27,6 +22,8 @@ import javax.activation.DataSource;
  * environment and the simulation.
  *
  * @author 
+ * Stephane Cayssials (272048)
+ * Anh Nghia Khau (223613)
  */
 
 
@@ -38,7 +35,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		private static final int INIT_GRASSENERGY = 10; 
 		private static final int WORLDXSIZE = 20;
 		private static final int WORLDYSIZE = 20;
-		private static final int MAX_ENERGY_OF_GRASS = 500;
+		private static final int MAX_ENERGY_OF_GRASS = 1000;
 
 	
 		private Schedule schedule;
@@ -52,7 +49,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		private RabbitsGrassSimulationSpace rgsSpace;
 		private DisplaySurface displaySurf;
 		private ArrayList<RabbitsGrassSimulationAgent> agentList;
-		private OpenSequenceGraph graph;
+		private OpenSequenceGraph agentGraph;
+		private OpenSequenceGraph grassGraph;
 		
 
 		public static void main(String[] args) {
@@ -62,18 +60,24 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 		
 		
-		public void setup() { // "2 curved arrows is pressed"
+		public void setup() { // button 2 curve arrow
 			this.rgsSpace = null;
 			this.agentList = new ArrayList<RabbitsGrassSimulationAgent>();
 			schedule = new Schedule(1);
 			
-			if (this.displaySurf != null){ //to remove the old stuff
+			if (this.displaySurf != null){ //remove the old stuff
 				displaySurf.dispose();
 			}
 			
-			if (this.graph != null){ //to remove the old stuff
-				graph.dispose();
+			if (this.agentGraph != null){ //remove the old stuff
+				agentGraph.dispose();
 			}
+			
+			if (this.grassGraph != null){
+				grassGraph.dispose();
+			}
+			
+			//slider
 			
 			RangePropertyDescriptor sliderSizeX = new RangePropertyDescriptor("WorldXSize", 0, 100, 20);
 			descriptors.put("WorldXSize", sliderSizeX);
@@ -87,10 +91,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			descriptors.put("BirthThreshold", birthThresh);
 			
 			displaySurf = new DisplaySurface(this, "Rabbits Grass Simulation windows");
-			graph = new OpenSequenceGraph("Flot", this);
+			agentGraph = new OpenSequenceGraph("AgentFlot", this);
+			grassGraph = new OpenSequenceGraph("GrassFlot", this);
 			
 			registerDisplaySurface("Rabbits Grass Simulation windows", displaySurf);
-			registerMediaProducer("Flot", graph);
+			registerMediaProducer("AgentFlot", agentGraph);
+			registerMediaProducer("GrassFlot", grassGraph );
 		}
 
 		public void begin() {// "Initialize" button
@@ -98,7 +104,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			buildSchedule();
 			buildDisplay();	
 			displaySurf.display();
-			graph.display();	
+			agentGraph.display();	
+			grassGraph.display();
 		}
 		
 		public void buildModel(){
@@ -113,9 +120,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			}
 		}
 
+		/**
+		 * Action of agent. For each simulation step, first we spread some grass and then for each agent:
+		 * check if he has enough energy, if yes he can move else he has to die.
+		 */
 		public void buildSchedule(){
-			
-			// action of agent, grass
+			// inner class for action of agent
 			class RabbitsGrassSimulationMove extends BasicAction {
 				@Override
 				public void execute() {
@@ -125,9 +135,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 					
 					// spread some grass
 					rgsSpace.spreadGrass(grassGrowRate);
-					// ????
-					SimUtilities.shuffle(agentList);
-					
+
+					SimUtilities.shuffle(agentList);					
 					for(int i = 0; i < agentList.size(); i++){
 						RabbitsGrassSimulationAgent agent = agentList.get(i);
 						
@@ -143,31 +152,37 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 							}
 						}
 					}
+					// update new position of all agent and energy of grass 
 					displaySurf.updateDisplay();
 				}
 			}
 			schedule.scheduleActionBeginning(0, new RabbitsGrassSimulationMove());
 			
+			//another inner class for graph
 	        class Update extends BasicAction {
 	            public void execute() {
-	                graph.step();
+	                agentGraph.step();
+	                grassGraph.step();
 	            }
 	        }
 	        schedule.scheduleActionAtInterval(10, new Update());
 		}
 
+		/**
+		 * Choose color for displaying grass.
+		 * We suppose that all grass have the same color
+		 */
 		public void buildDisplay(){
 			ColorMap map = new ColorMap();
 			
-			//map color for grass
-			for(int i = 0; i < MAX_ENERGY_OF_GRASS ; i++){
+			//map color for grass (grass that has energy >= 1)
+			for(int i = 1; i <= MAX_ENERGY_OF_GRASS ; i++){
 				map.mapColor(i, Color.green);
 			}
 			
-			//map color for background
+			//map color for background ("grass" that has energy = 0)
 			map.mapColor(0, Color.black);
 			
-			//interconnect 2 into 1
 			Value2DDisplay displayGrass = new Value2DDisplay(rgsSpace.getCurrentGrassSpace(), map);
 			Object2DDisplay displayAgents = new Object2DDisplay(rgsSpace.getCurrentAgentSpace());
 			displayAgents.setObjectList(agentList);
@@ -175,11 +190,15 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			displaySurf.addDisplayableProbeable(displayGrass, "Grass");
 			displaySurf.addDisplayableProbeable(displayAgents, "Agents");
 			
-			graph.addSequence("Agent Count", new AgentCount());
-			graph.addSequence("Grass Count", new GrassCount());
+			agentGraph.addSequence("Agent Count", new AgentCount());
+			grassGraph.addSequence("Grass Count", new GrassCount());
 			
 		}
 		
+		/**
+		 * create an new agent with an initGrassEnergy and try to add into the space
+		 * @return true if success
+		 */
 		private boolean addNewAgent(){
 			RabbitsGrassSimulationAgent agent = new RabbitsGrassSimulationAgent(-1,-1,this.initGrassEnergy);
 			this.agentList.add(agent); // Add to list
@@ -197,51 +216,34 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			return "Rabbit Grass Simulation...";
 		}
 
-		public Schedule getSchedule() {
-			return schedule;
-		}
+		public Schedule getSchedule() { return schedule; }
 		
-		public int getNumAgents(){
-			return this.numAgents;
-		}
+		public int getNumAgents(){ return this.numAgents; }
 		
-		public void setNumAgents(int num){
-			this.numAgents = num;
-		}
+		public void setNumAgents(int num){ this.numAgents = num; }
 		
-		public int getBirthThreshold(){
-			return this.birthThreshold;
-		}
+		public int getBirthThreshold(){ return this.birthThreshold; }
 		
-		public void setBirthThreshold(int num){
-			this.birthThreshold = num;
-		}
+		public void setBirthThreshold(int num){ this.birthThreshold = num; }
 		
-		public int getGrassGrowRate(){
-			return this.grassGrowRate;
-		}
+		public int getGrassGrowRate(){ return this.grassGrowRate; }
 		
-		public void setGrassGrowRate(int num){
-			this.grassGrowRate = num;
-		}
+		public void setGrassGrowRate(int num){ this.grassGrowRate = num; }
 		
-		public int getWorldXSize(){
-		    return this.worldXSize;
-		}
+		public int getWorldXSize(){  return this.worldXSize; }
 
-		public void setWorldXSize(int wxs){
-		    this.worldXSize = wxs;
-		}
+		public void setWorldXSize(int wxs){ this.worldXSize = wxs; }
 
-		public int getWorldYSize(){
-		    return this.worldYSize;	
-		}
+		public int getWorldYSize(){ return this.worldYSize;	}
 
-		public void setWorldYSize(int wys){
-		    this.worldYSize = wys;
-		}	
+		public void setWorldYSize(int wys){ this.worldYSize = wys; }	
 		
-		
+		/**
+		 * 
+		 * Inner class implement interface Sequence for the plotting
+		 * Method getSValue() return number of agent and this number will be plotted into graph
+		 *
+		 */
 		class AgentCount implements Sequence {
 
 			public Object execute(){
@@ -253,7 +255,11 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 				return agentList.size();
 			}
 		}
-		
+		/**
+		 * Inner class implement interface Sequence for the plotting
+		 * Method getSValue() return number of total grass presented in the model
+		 * This number will be plotted into graph
+		 */
 		class GrassCount implements Sequence {
 			
 			public Object execute() {
