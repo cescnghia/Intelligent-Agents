@@ -8,7 +8,7 @@ public class AgentAction{
 	 * PICKUP : moving to a city for pickup some task
 	 * 
 	 */
-	private enum Action {MOVE, PICKUP}
+	public enum Action {MOVE, PICKUP, DELIVER}
 	
 	private City destinationCity;
 	private Action action;
@@ -24,6 +24,10 @@ public class AgentAction{
 	
 	public boolean isPickup(){
 		return (this.action == Action.PICKUP);
+	}
+	
+	public boolean isDeliver(){
+		return (this.action == Action.DELIVER) ;
 	}
 	
 	public City getDestination() {return this.destinationCity;}

@@ -21,7 +21,4 @@ public class State {
 	
 	public void setCurrentCity(City that) {this.currentCity = that;}
 	public void setDestinationCity(City that) {this.destinationCity = that;}
-
-
-
 }
