@@ -1,5 +1,9 @@
 package template;
-
+/**
+ * Class that having a tuple for storing (BestAction, BestValue) 
+ * @author Cescnghia
+ *
+ */
 public class TupleActionValue {
 	
 	private AgentAction agentAction;
@@ -11,9 +15,9 @@ public class TupleActionValue {
 		this.value = v;
 	}
 	
-	public AgentAction getAgentAction() { return this.agentAction; }
-	public double getValue() {return this.value; }
+	public AgentAction getBestAction() { return this.agentAction; }
+	public double getBestValue() {return this.value; }
 	
-	public void setAgentAction(AgentAction action) {this.agentAction = action;}
-	public void setValue(double v) {this.value = v;}
+	public void setBestAction(AgentAction action) {this.agentAction = action;}
+	public void setBestValue(double v) {this.value = v;}
 }
