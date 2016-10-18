@@ -232,10 +232,10 @@ public class State implements Comparable<State> {
 
 	@Override
 	public int compareTo(State o) {
-		if((this.cost + this.heuristicCost) < o.cost) {
+		if((this.cost + this.heuristicCost) < (o.cost + o.heuristicCost)) {
 			return -1;
 		} 
-	    else if(o.cost < (this.cost + this.heuristicCost)) {
+	    else if((o.cost + o.heuristicCost) < (this.cost + this.heuristicCost)) {
 	    	return 1;
 	    }
 	    return 0;
