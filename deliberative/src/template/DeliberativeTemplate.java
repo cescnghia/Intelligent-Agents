@@ -109,10 +109,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		State currentState = new State(vehicle, tasks, currentCity);
 		Q.add(currentState);
 		
-		System.out.println("*******bfs plan********");
-		
 		while(!finalNode){
-//			System.out.println("***********new iteration***********");
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
 			}

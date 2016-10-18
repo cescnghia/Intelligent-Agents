@@ -73,19 +73,7 @@ public class State implements Comparable<State> {
 	
 	public boolean isFinal() {
 		// if there is no available task on the map and the vehicle do not carry task
-		// this means that the state is final
-		
-		System.out.println("total size = " + this.mAvailableTasks.size() + this.mCarriedTasks.size() );
-		
-		if(this.mAvailableTasks.size() == 0) {
-			System.out.println("this.mAvailableTasks.size() == 0");
-		}
-		
-		if(this.mCarriedTasks.size() == 0) {
-			System.out.println("this.mCarriedTasks.size() == 0");
-		}
-		
-		
+		// this means that the state is final		
 		if (this.mAvailableTasks.size() == 0 && this.mCarriedTasks.size() == 0) {
 			return true;
 		}
@@ -97,90 +85,66 @@ public class State implements Comparable<State> {
 		List<State> stateList = new ArrayList<State>();
 		// fill the list with all the next state for each action type
 		// for PICKUP in a city or for DELIVERY in a city
-//		for (ActionsEnum action: ActionsEnum.values()) {
+		// We check if one of more of all available task can be a next
+		// pickup state
+		for (Task taskAvailable : this.mAvailableTasks) {
+			// we check if the vehicle has enough place for the task
+			if (this.mFreeWeight < taskAvailable.weight) {
+				// stop here for this task because there is not enough place in the vehicle
+				continue;
+			}
+			// calculate the new freeWeight of the vehicle that has pickup the new task
+			int newFreeWeight = this.mFreeWeight + taskAvailable.weight;
 
-//			if(action == ActionsEnum.PICKUP) {
-//				System.out.println("pickup");
-				// We check if one of more of all available task can be a next
-				// pickup state
-				for (Task taskAvailable : this.mAvailableTasks) {
-					// we check if the vehicle has enough place for the task
-					if (this.mFreeWeight < taskAvailable.weight) {
-						// stop here for this task because there is not enough place in the vehicle
-						continue;
-					}
-					// calculate the new freeWeight of the vehicle that has pickup the new task
-					int newFreeWeight = this.mFreeWeight + taskAvailable.weight;
-					
-					Plan newPlan = new Plan(this.mInitialCity);
-					
-					Iterator<Action> planIterator = this.mPlan.iterator();
-					while (planIterator.hasNext()) {
-					    Action previousPlanAction = planIterator.next();
-					    newPlan.append(previousPlanAction);
-					}
-					
-					for (City city : this.mCurrentCity.pathTo(taskAvailable.pickupCity))
-						newPlan.appendMove(city);
+			Plan newPlan = new Plan(this.mInitialCity);
 
-					newPlan.appendPickup(taskAvailable);
-					
-					// set the new city
-					City newCity = taskAvailable.pickupCity;
-					
-					// set the new availableTasks Set by removing the picked one
-					TaskSet newAvailableTasks = this.mAvailableTasks.clone();
-					newAvailableTasks.remove(taskAvailable);
-//					System.out.println("mAvailableTasks : " + this.mAvailableTasks);
-//					System.out.println("newAvailableTasks : " + newAvailableTasks);
+			Iterator<Action> planIterator = this.mPlan.iterator();
+			while (planIterator.hasNext()) {
+				Action previousPlanAction = planIterator.next();
+				newPlan.append(previousPlanAction);
+			}
 
-					// set the new carriedTask Set
-					TaskSet newCarriedTasks = this.mCarriedTasks.clone();
-					newCarriedTasks.add(taskAvailable);
-					
+			for (City city : this.mCurrentCity.pathTo(taskAvailable.pickupCity))
+				newPlan.appendMove(city);
 
-					// add the new nextState to the nextState List
-					stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity));
-				}
-//			}
-//			if (action == ActionsEnum.DELIVERY) {
-//				System.out.println("delivery");
-				// We check if one of more of all carriedTask can be Delivered
-				for (Task taskDelivrable : this.mCarriedTasks) {
-					// calculate the new freeWeight of the vehicle that has pickup the new task
-					int newFreeWeight = this.mFreeWeight - taskDelivrable.weight;
-					Plan newPlan = new Plan(this.mInitialCity);
-					
-					Iterator<Action> planIterator = this.mPlan.iterator();
-					while (planIterator.hasNext()) {
-					    Action previousPlanAction = planIterator.next();
-					    newPlan.append(previousPlanAction);
-					}
-					
-					for (City city : this.mCurrentCity.pathTo(taskDelivrable.deliveryCity))
-						newPlan.appendMove(city);
+			newPlan.appendPickup(taskAvailable);
+			// set the new city
+			City newCity = taskAvailable.pickupCity;
+			// set the new availableTasks Set by removing the picked one
+			TaskSet newAvailableTasks = this.mAvailableTasks.clone();
+			newAvailableTasks.remove(taskAvailable);
+			// set the new carriedTask Set
+			TaskSet newCarriedTasks = this.mCarriedTasks.clone();
+			newCarriedTasks.add(taskAvailable);
+			// add the new nextState to the nextState List
+			stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity));
+		}
+		// We check if one of more of all carriedTask can be Delivered
+		for (Task taskDelivrable : this.mCarriedTasks) {
+			// calculate the new freeWeight of the vehicle that has pickup the new task
+			int newFreeWeight = this.mFreeWeight - taskDelivrable.weight;
+			Plan newPlan = new Plan(this.mInitialCity);
 
-					newPlan.appendDelivery(taskDelivrable);
-					// set the new city
-					City newCity = taskDelivrable.deliveryCity;
-					// set the new availableTasks which is the same as previously
-					TaskSet newAvailableTasks = this.mAvailableTasks.clone();
-					// set the new carriedTask Set
-					TaskSet newCarriedTasks = this.mCarriedTasks.clone();
-					newCarriedTasks.remove(taskDelivrable);
-//					System.out.println("mCarriedTasks : " + this.mCarriedTasks);
-//					System.out.println("newCarriedTasks : " + newCarriedTasks);
-					// add the new nextState to the nextState List
-					stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity));
-				}
-				
-//				Thread.sleep(100);
-//			}
-//		}
+			Iterator<Action> planIterator = this.mPlan.iterator();
+			while (planIterator.hasNext()) {
+				Action previousPlanAction = planIterator.next();
+				newPlan.append(previousPlanAction);
+			}
 
-		/////////////////////////////////
-//		System.out.println("return : " + stateList);
-		/////////////////////////////////
+			for (City city : this.mCurrentCity.pathTo(taskDelivrable.deliveryCity))
+				newPlan.appendMove(city);
+
+			newPlan.appendDelivery(taskDelivrable);
+			// set the new city
+			City newCity = taskDelivrable.deliveryCity;
+			// set the new availableTasks which is the same as previously
+			TaskSet newAvailableTasks = this.mAvailableTasks.clone();
+			// set the new carriedTask Set
+			TaskSet newCarriedTasks = this.mCarriedTasks.clone();
+			newCarriedTasks.remove(taskDelivrable);
+			// add the new nextState to the nextState List
+			stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity));
+		}
 		
 		return stateList;
 	}
