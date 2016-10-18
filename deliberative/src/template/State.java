@@ -29,10 +29,12 @@ public class State implements Comparable<State> {
 	private Plan mPlan;
 	private City mInitialCity;
 	public boolean isFinal;
+	public double cost;
 	
 	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity) {
 		this.mPlan = new Plan(currentCity);
 		this.mInitialCity = currentCity;
+		this.cost = 0;
 		
 		
 		this.mVehicle = vehicule;
@@ -52,10 +54,17 @@ public class State implements Comparable<State> {
 		return mPlan;
 	}
 
-	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity, int freeWeight, TaskSet carriedTasks, Plan plan, City initialCity) {
+	public State(	Vehicle vehicule, 
+					TaskSet availableTasks, 
+					City currentCity, 
+					int freeWeight, 
+					TaskSet carriedTasks, 
+					Plan plan, 
+					City initialCity,
+					double cost) {
 		this.mPlan = plan;
 		this.mInitialCity = initialCity;
-		
+		this.cost = cost;
 		
 		this.mVehicle = vehicule;
 		this.mAvailableTasks = availableTasks;
@@ -80,7 +89,7 @@ public class State implements Comparable<State> {
 		return false;
 	}
 	
-	public List<State> succ() throws InterruptedException {
+	public List<State> succ() {
 			
 		List<State> stateList = new ArrayList<State>();
 		// fill the list with all the next state for each action type
@@ -88,6 +97,7 @@ public class State implements Comparable<State> {
 		// We check if one of more of all available task can be a next
 		// pickup state
 		for (Task taskAvailable : this.mAvailableTasks) {
+			
 			// we check if the vehicle has enough place for the task
 			if (this.mFreeWeight < taskAvailable.weight) {
 				// stop here for this task because there is not enough place in the vehicle
@@ -108,6 +118,9 @@ public class State implements Comparable<State> {
 				newPlan.appendMove(city);
 
 			newPlan.appendPickup(taskAvailable);
+			// set the cost
+			double newCost = this.mCurrentCity.distanceTo(taskAvailable.pickupCity) * this.mVehicle.costPerKm();
+			newCost += this.cost;
 			// set the new city
 			City newCity = taskAvailable.pickupCity;
 			// set the new availableTasks Set by removing the picked one
@@ -117,7 +130,7 @@ public class State implements Comparable<State> {
 			TaskSet newCarriedTasks = this.mCarriedTasks.clone();
 			newCarriedTasks.add(taskAvailable);
 			// add the new nextState to the nextState List
-			stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity));
+			stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity, newCost));
 		}
 		// We check if one of more of all carriedTask can be Delivered
 		for (Task taskDelivrable : this.mCarriedTasks) {
@@ -135,6 +148,9 @@ public class State implements Comparable<State> {
 				newPlan.appendMove(city);
 
 			newPlan.appendDelivery(taskDelivrable);
+			// set the cost
+			double newCost = - taskDelivrable.reward + taskDelivrable.pathLength() * this.mVehicle.costPerKm();
+			newCost += this.cost;
 			// set the new city
 			City newCity = taskDelivrable.deliveryCity;
 			// set the new availableTasks which is the same as previously
@@ -143,7 +159,7 @@ public class State implements Comparable<State> {
 			TaskSet newCarriedTasks = this.mCarriedTasks.clone();
 			newCarriedTasks.remove(taskDelivrable);
 			// add the new nextState to the nextState List
-			stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity));
+			stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, newPlan, this.mInitialCity, newCost));
 		}
 		
 		return stateList;
@@ -194,8 +210,13 @@ public class State implements Comparable<State> {
 
 	@Override
 	public int compareTo(State o) {
-		// TODO Auto-generated method stub
-		return 0;
+		if(this.cost < o.cost) {
+			return -1;
+		} 
+	    else if(o.cost < this.cost) {
+	    	return 1;
+	    }
+	    return 0;
 	}
 	
 }

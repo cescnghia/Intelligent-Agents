@@ -4,6 +4,7 @@ package template;
 import logist.simulation.Vehicle;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -59,16 +60,11 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		switch (algorithm) {
 		case ASTAR:
 			// ...
-			plan = naivePlan(vehicle, tasks);
+			plan = astarPlan(vehicle, tasks);
 			break;
 		case BFS:
 			// ...
-			try {
-				plan = bfsPlan(vehicle, tasks);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			plan = bfsPlan(vehicle, tasks);
 			break;
 		default:
 			throw new AssertionError("Should not happen.");
@@ -99,7 +95,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		return plan;
 	}
 	
-	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) throws InterruptedException {
+	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
 		boolean finalNode = false;
@@ -122,6 +118,41 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			if(!C.contains(analysedState)){
 				C.add(analysedState);
 				Q.addAll(analysedState.succ());
+			}
+		}
+		return plan;
+	}
+	
+	private Plan astarPlan(Vehicle vehicle, TaskSet tasks) {
+		City currentCity = vehicle.getCurrentCity();
+		Plan plan = new Plan(currentCity);
+		boolean finalNode = false;
+		LinkedList<State> Q = new LinkedList<State>();
+		ArrayList<State> C = new ArrayList<State>();
+
+		State currentState = new State(vehicle, tasks, currentCity);
+		Q.add(currentState);
+		
+		while(!finalNode){
+			if(Q.isEmpty()){
+				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
+			}
+			State analysedState = Q.poll();
+			if (analysedState.isFinal) {
+				System.out.println("isFinal");
+				plan = analysedState.getPlan();
+				finalNode = true;
+			}
+			boolean hasLowerCost = false;
+			if(C.contains(analysedState)){
+				hasLowerCost = analysedState.cost < C.get(C.indexOf(analysedState)).cost;
+			}
+			if(!C.contains(analysedState) || hasLowerCost){
+				C.add(analysedState);
+				List<State> successorStatesList = analysedState.succ();
+				Collections.sort(successorStatesList);
+				Q.addAll(successorStatesList);
+				Collections.sort(Q);
 			}
 		}
 		return plan;
