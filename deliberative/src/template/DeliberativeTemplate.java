@@ -63,7 +63,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			break;
 		case BFS:
 			// ...
-			plan = naivePlan(vehicle, tasks);
+			plan = bfsPlan(vehicle, tasks);
 			break;
 		default:
 			throw new AssertionError("Should not happen.");
@@ -94,7 +94,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		return plan;
 	}
 	
-	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) throws Exception {
+	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
 		boolean finalNode = false;
@@ -106,7 +106,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		
 		while(!finalNode){
 			if(Q.isEmpty()){
-				throw new Exception("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
+				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
 			}
 			State analysedState = Q.poll();
 			if (analysedState.isFinal()) {
