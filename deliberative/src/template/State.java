@@ -30,12 +30,12 @@ public class State implements Comparable<State> {
 	private City mInitialCity;
 	public boolean isFinal;
 	public double cost;
+	public double heuristicCost;
 	
 	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity) {
 		this.mPlan = new Plan(currentCity);
 		this.mInitialCity = currentCity;
 		this.cost = 0;
-		
 		
 		this.mVehicle = vehicule;
 		this.mAvailableTasks = availableTasks;
@@ -48,6 +48,17 @@ public class State implements Comparable<State> {
 		}
 		this.mFreeWeight = this.mVehicle.capacity() - this.mWeight;	
 		this.isFinal = this.isFinal();
+		
+		double heuristicTmp = 0;
+		for (Task ta : availableTasks) {
+			double tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm() - ta.reward;
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
+		}
+		for(Task tc: mCarriedTasks){
+			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm() - tc.reward;
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
+		}
+		this.heuristicCost = heuristicTmp;
 	}
 	
 	public Plan getPlan() {
@@ -78,6 +89,17 @@ public class State implements Comparable<State> {
 		this.mFreeWeight = this.mVehicle.capacity() - this.mWeight;
 		this.mFreeWeight = freeWeight;
 		this.isFinal = this.isFinal();
+		
+		double heuristicTmp = 0;
+		for (Task ta : availableTasks) {
+			double tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm();
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
+		}
+		for(Task tc: mCarriedTasks){
+			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
+		}
+		this.heuristicCost = heuristicTmp;
 	}
 	
 	public boolean isFinal() {
@@ -149,7 +171,7 @@ public class State implements Comparable<State> {
 
 			newPlan.appendDelivery(taskDelivrable);
 			// set the cost
-			double newCost = - taskDelivrable.reward + taskDelivrable.pathLength() * this.mVehicle.costPerKm();
+			double newCost = mCurrentCity.distanceTo(taskDelivrable.deliveryCity) * this.mVehicle.costPerKm();
 			newCost += this.cost;
 			// set the new city
 			City newCity = taskDelivrable.deliveryCity;
@@ -210,13 +232,18 @@ public class State implements Comparable<State> {
 
 	@Override
 	public int compareTo(State o) {
-		if(this.cost < o.cost) {
+		if((this.cost + this.heuristicCost) < o.cost) {
 			return -1;
 		} 
-	    else if(o.cost < this.cost) {
+	    else if(o.cost < (this.cost + this.heuristicCost)) {
 	    	return 1;
 	    }
 	    return 0;
+	}
+
+	@Override
+	public String toString() {
+		return "State [currentCity=" + mCurrentCity + ", cost=" + cost + "]";
 	}
 	
 }

@@ -105,7 +105,9 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		State currentState = new State(vehicle, tasks, currentCity);
 		Q.add(currentState);
 		
+		int iteration = 0;
 		while(!finalNode){
+			iteration ++;
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
 			}
@@ -118,8 +120,11 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			if(!C.contains(analysedState)){
 				C.add(analysedState);
 				Q.addAll(analysedState.succ());
+			} else {
+				System.out.println("test");
 			}
 		}
+		System.out.println(iteration);
 		return plan;
 	}
 	
@@ -132,8 +137,9 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 
 		State currentState = new State(vehicle, tasks, currentCity);
 		Q.add(currentState);
-		
+		int iteration = 0;
 		while(!finalNode){
+			iteration ++;
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
 			}
@@ -155,6 +161,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 				Collections.sort(Q);
 			}
 		}
+		System.out.println(iteration);
 		return plan;
 	}
 
