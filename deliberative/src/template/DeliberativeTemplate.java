@@ -2,6 +2,11 @@ package template;
 
 /* import table */
 import logist.simulation.Vehicle;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
 import logist.plan.Plan;
@@ -89,27 +94,28 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		return plan;
 	}
 	
-	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
-		City current = vehicle.getCurrentCity();
-		Plan plan = new Plan(current);
+	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) throws Exception {
+		City currentCity = vehicle.getCurrentCity();
+		Plan plan = new Plan(currentCity);
+		boolean finalNode = false;
+		LinkedList<State> Q = new LinkedList<State>();
+		LinkedList<State> C = new LinkedList<State>();
 
-		State currentState = new State(vehicle, tasks, current);
+		State currentState = new State(vehicle, tasks, currentCity);
+		Q.add(currentState);
 		
-		for (Task task : tasks) {
-			// move: current city => pickup location
-			for (City city : current.pathTo(task.pickupCity))
-				plan.appendMove(city);
-
-			plan.appendPickup(task);
-
-			// move: pickup location => delivery location
-			for (City city : task.path())
-				plan.appendMove(city);
-
-			plan.appendDelivery(task);
-
-			// set current city
-			current = task.deliveryCity;
+		while(!finalNode){
+			if(Q.isEmpty()){
+				throw new Exception("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
+			}
+			State analysedState = Q.poll();
+			if (analysedState.isFinal()) {
+				plan = analysedState.getPlan();
+			}
+			if(!C.contains(analysedState)){
+				C.add(analysedState);
+				Q.addAll(analysedState.succ());
+			}
 		}
 		return plan;
 	}

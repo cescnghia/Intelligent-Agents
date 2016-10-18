@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import logist.plan.Action;
+import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskSet;
@@ -24,8 +25,14 @@ public class State {
 	private City mCurrentCity;
 	private int mWeight;
 	private int mFreeWeight;
+	private ActionsEnum mActionEnum;
+	private Plan mPlan;
 	
-	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity) {	
+	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity) {
+		this.mActionEnum = ActionsEnum.INITSTATE;
+		this.mPlan = new Plan(currentCity);
+		this.mPlan.seal();
+		
 		this.mVehicle = vehicule;
 		this.mAvailableTasks = availableTasks;
 		this.mCurrentCity = currentCity;
@@ -38,7 +45,14 @@ public class State {
 		this.mFreeWeight = this.mVehicle.capacity() - this.mWeight;	
 	}
 	
-	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity, int freeWeight, TaskSet carriedTasks) {
+	public Plan getPlan() {
+		return mPlan;
+	}
+
+	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity, int freeWeight, TaskSet carriedTasks, ActionsEnum actionEnum, Plan plan) {
+		this.mActionEnum = actionEnum;
+		this.mPlan = plan;
+		
 		this.mVehicle = vehicule;
 		this.mAvailableTasks = availableTasks;
 		this.mCurrentCity = currentCity;
@@ -77,6 +91,11 @@ public class State {
 					}
 					// calculate the new freeWeight of the vehicle that has pickup the new task
 					int newFreeWeight = this.mFreeWeight + taskAvailable.weight;
+					Plan newPlan = this.mPlan;
+					for (City city : this.mCurrentCity.pathTo(taskAvailable.pickupCity))
+						newPlan.appendMove(city);
+
+					newPlan.appendPickup(taskAvailable);
 					// set the new city
 					City newCity = taskAvailable.pickupCity;
 					// set the new availableTasks Set by removing the picked one
@@ -86,7 +105,7 @@ public class State {
 					TaskSet newCarriedTasks = TaskSet.copyOf(this.mCarriedTasks);
 					newCarriedTasks.add(taskAvailable);
 					// add the new nextState to the nextState List
-					stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks));
+					stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, action, newPlan));
 				}
 			}
 			if (action == ActionsEnum.DELIVERY) {
@@ -94,6 +113,11 @@ public class State {
 				for (Task taskDelivrable : this.mCarriedTasks) {
 					// calculate the new freeWeight of the vehicle that has pickup the new task
 					int newFreeWeight = this.mFreeWeight - taskDelivrable.weight;
+					Plan newPlan = this.mPlan;
+					for (City city : this.mCurrentCity.pathTo(taskDelivrable.pickupCity))
+						newPlan.appendMove(city);
+
+					newPlan.appendDelivery(taskDelivrable);
 					// set the new city
 					City newCity = taskDelivrable.deliveryCity;
 					// set the new availableTasks which is the same as previously
@@ -102,7 +126,7 @@ public class State {
 					TaskSet newCarriedTasks = TaskSet.copyOf(this.mCarriedTasks);
 					newCarriedTasks.remove(taskDelivrable);
 					// add the new nextState to the nextState List
-					stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks));
+					stateList.add(new State(this.mVehicle, newAvailableTasks, newCity, newFreeWeight, newCarriedTasks, action, newPlan));
 				}
 			}
 		}
