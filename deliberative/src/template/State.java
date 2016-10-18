@@ -20,12 +20,10 @@ public class State {
 	private Vehicle mVehicle;
 	private TaskSet mAvailableTasks;
 	private City mCurrentCity;
-	
 	private int mWeight;
 	private int mFreeWeight;
 	
-	public State(Vehicle mVehicule, TaskSet mAvailableTasks, City currentCity) {
-		
+	public State(Vehicle mVehicule, TaskSet mAvailableTasks, City currentCity) {	
 		this.mVehicle = mVehicule;
 		this.mAvailableTasks = mAvailableTasks;
 		this.mCurrentCity = currentCity;
@@ -34,8 +32,16 @@ public class State {
 		for (Task task: mVehicle.getCurrentTasks()) {
 			this.mWeight += task.weight;
 		}
-		this.mFreeWeight = this.mVehicle.capacity() - this.mWeight;
-		
+		this.mFreeWeight = this.mVehicle.capacity() - this.mWeight;	
+	}
+	
+	public boolean isFinal() {
+		// if there is no available task on the map and the vehicle do not carry task
+		// this means that the state is final
+		if (this.mAvailableTasks.isEmpty() && this.mVehicle.getCurrentTasks().isEmpty()) {
+			return true;
+		}
+		return false;
 	}
 
 	public Vehicle getVehicule() {
