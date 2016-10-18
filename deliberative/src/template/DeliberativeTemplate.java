@@ -53,7 +53,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 	
 	@Override
 	public Plan plan(Vehicle vehicle, TaskSet tasks) {
-		Plan plan;
+		Plan plan = null;
 
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
@@ -63,7 +63,12 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			break;
 		case BFS:
 			// ...
-			plan = bfsPlan(vehicle, tasks);
+			try {
+				plan = bfsPlan(vehicle, tasks);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			break;
 		default:
 			throw new AssertionError("Should not happen.");
@@ -94,23 +99,28 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		return plan;
 	}
 	
-	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
+	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) throws InterruptedException {
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
 		boolean finalNode = false;
 		LinkedList<State> Q = new LinkedList<State>();
-		LinkedList<State> C = new LinkedList<State>();
+		ArrayList<State> C = new ArrayList<State>();
 
 		State currentState = new State(vehicle, tasks, currentCity);
 		Q.add(currentState);
 		
+		System.out.println("*******bfs plan********");
+		
 		while(!finalNode){
+//			System.out.println("***********new iteration***********");
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
 			}
 			State analysedState = Q.poll();
-			if (analysedState.isFinal()) {
+			if (analysedState.isFinal) {
+				System.out.println("isFinal");
 				plan = analysedState.getPlan();
+				finalNode = true;
 			}
 			if(!C.contains(analysedState)){
 				C.add(analysedState);
