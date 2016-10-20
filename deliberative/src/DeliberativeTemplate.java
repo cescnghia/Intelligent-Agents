@@ -118,18 +118,19 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			iteration ++;
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
+				break;
 			}
 			State analysedState = Q.poll();
-			if (analysedState.isFinal) {
-				System.out.println("isFinal");
+			if (analysedState.isFinal()) {
+				System.out.println("Final State, the cost is: "+analysedState.mCost);
 				plan = analysedState.getPlan();
 				finalNode = true;
 			}
-			if(!C.contains(analysedState)){
+			if (! C.contains(analysedState)){
 				C.add(analysedState);
-				Q.addAll(analysedState.succ());
-			} else {
-				//System.out.println("test");
+				for (State s : analysedState.succ())
+					if (! Q.contains(s))
+						Q.add(s);
 			}
 		}
 		long end = System.currentTimeMillis();
@@ -159,25 +160,31 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			iteration++;
 			if ( Q.isEmpty()) {
 				System.out.println("Failure !!!!");
+				break;
 			}
 			
 			State analysedState = Q.poll();
 			// Final state => return the plan
 			if (analysedState.isFinal()) {
-				System.out.println("Final State");
+				System.out.println("Final State, the cost is: "+analysedState.mCost);
 				finalNode = true;
 				plan = analysedState.getPlan();
 			}
 			
 			boolean hasLowerCost = false;
 			if(C.contains(analysedState)){
-				hasLowerCost = analysedState.cost < C.get(C.indexOf(analysedState)).cost;
+				hasLowerCost = analysedState.mCost < C.get(C.indexOf(analysedState)).mCost;
 			}
 			
 			if(!C.contains(analysedState) || hasLowerCost){
+
 				C.add(analysedState);
 				List<State> successorStatesList = analysedState.succ();
-				Q.addAll(successorStatesList);
+				//Merge
+				for (State s1 : successorStatesList){
+					if (! Q.contains(s1))
+						Q.add(s1);
+				}
 			}		
 		}
 		long end = System.currentTimeMillis();

@@ -29,13 +29,13 @@ public class State implements Comparable<State> {
 	private Plan mPlan;
 	private City mInitialCity;
 	public boolean isFinal;
-	public double cost;
-	public double heuristicCost;
+	public double mCost;
+	public double mHeuristicCost;
 	
 	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity) {
 		this.mPlan = new Plan(currentCity);
 		this.mInitialCity = currentCity;
-		this.cost = 0;
+		this.mCost = 0;
 
 		
 		this.mVehicle = vehicule;
@@ -61,7 +61,7 @@ public class State implements Comparable<State> {
 			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
 			if(tmpCost < minCostDelivery) minCostDelivery = tmpCost;
 		}
-		this.heuristicCost = Double.min(minCostDelivery,minCostPickUp);
+		this.mHeuristicCost = Double.min(minCostDelivery,minCostPickUp);
 	}
 	
 	public Plan getPlan() {
@@ -78,7 +78,7 @@ public class State implements Comparable<State> {
 					double cost) {
 		this.mPlan = plan;
 		this.mInitialCity = initialCity;
-		this.cost = cost;
+		this.mCost = cost;
 		
 		this.mVehicle = vehicule;
 		this.mAvailableTasks = availableTasks;
@@ -93,6 +93,8 @@ public class State implements Comparable<State> {
 		this.mFreeWeight = freeWeight;
 		this.isFinal = this.isFinal();
 		
+		// Move to succ()
+
 		double minCostPickUp = 0;
 		double minCostDelivery = 0;
 		
@@ -104,7 +106,8 @@ public class State implements Comparable<State> {
 			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
 			if(tmpCost < minCostDelivery) minCostDelivery = tmpCost;
 		}
-		this.heuristicCost = Double.min(minCostDelivery,minCostPickUp);
+		this.mHeuristicCost = Double.min(minCostDelivery,minCostPickUp);
+
 	}
 	
 	public boolean isFinal() {
@@ -120,7 +123,10 @@ public class State implements Comparable<State> {
 		// for PICKUP in a city or for DELIVERY in a city
 		// We check if one of more of all available task can be a next
 		// pickup state
+		
+		
 		for (Task taskAvailable : this.mAvailableTasks) {
+			
 			
 			// we check if the vehicle has enough place for the task
 			if (this.mFreeWeight < taskAvailable.weight) {
@@ -145,7 +151,7 @@ public class State implements Comparable<State> {
 			newPlan.appendPickup(taskAvailable);
 			// set the cost
 			double newCost = this.mCurrentCity.distanceTo(taskAvailable.pickupCity) * this.mVehicle.costPerKm();
-			newCost += this.cost;
+			newCost += this.mCost;
 			// set the new city
 			City newCity = taskAvailable.pickupCity;
 			// set the new availableTasks Set by removing the picked one
@@ -159,6 +165,8 @@ public class State implements Comparable<State> {
 		}
 		// We check if one of more of all carriedTask can be Delivered
 		for (Task taskDelivrable : this.mCarriedTasks) {
+			
+			
 			// calculate the new freeWeight of the vehicle that has pickup the new task
 			int newFreeWeight = this.mFreeWeight - taskDelivrable.weight;
 			Plan newPlan = new Plan(this.mInitialCity);
@@ -175,7 +183,7 @@ public class State implements Comparable<State> {
 			newPlan.appendDelivery(taskDelivrable);
 			// set the cost
 			double newCost = mCurrentCity.distanceTo(taskDelivrable.deliveryCity) * this.mVehicle.costPerKm();
-			newCost += this.cost;
+			newCost += this.mCost;
 			// set the new city
 			City newCity = taskDelivrable.deliveryCity;
 			// set the new availableTasks which is the same as previously
@@ -235,10 +243,10 @@ public class State implements Comparable<State> {
 
 	@Override
 	public int compareTo(State o) {
-		if((this.cost + this.heuristicCost) < (o.cost + o.heuristicCost)) {
+		if((this.mCost + this.mHeuristicCost) < (o.mCost + o.mHeuristicCost)) {
 			return -1;
 		} 
-	    else if((o.cost + o.heuristicCost) < (this.cost + this.heuristicCost)) {
+	    else if((o.mCost + o.mHeuristicCost) < (this.mCost + this.mHeuristicCost)) {
 	    	return 1;
 	    }
 	    return 0;
@@ -246,7 +254,7 @@ public class State implements Comparable<State> {
 
 	@Override
 	public String toString() {
-		return "State [currentCity=" + mCurrentCity + ", cost=" + cost + "]";
+		return "State [currentCity=" + mCurrentCity + ", cost=" + mCost + "]";
 	}
 
 }
