@@ -25,7 +25,7 @@ import logist.topology.Topology.City;
 @SuppressWarnings("unused")
 public class DeliberativeTemplate implements DeliberativeBehavior {
 
-	enum Algorithm { BFS, ASTAR }
+	enum Algorithm { BFS, ASTAR, NAIVE }
 	
 	/* Environment */
 	Topology topology;
@@ -68,6 +68,9 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			// ...
 			plan = bfsPlan(vehicle, tasks);
 			break;
+		case NAIVE:
+			plan = naivePlan(vehicle, tasks);
+			break;
 		default:
 			throw new AssertionError("Should not happen.");
 		}		
@@ -98,6 +101,9 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 	}
 	
 	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
+		// time
+		long begin = System.currentTimeMillis();  
+		
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
 		boolean finalNode = false;
@@ -126,11 +132,15 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 				//System.out.println("test");
 			}
 		}
-		System.out.println("BFS takes "+iteration+" iterations");
+		long end = System.currentTimeMillis();
+		System.out.println("A-Star takes "+iteration+" iterations in "+(end-begin)+" ms");
 		return plan;
 	}
-/*	
+	
 	private Plan astarPlan(Vehicle vehicle, TaskSet tasks){
+		// time
+		long begin = System.currentTimeMillis();
+		
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
 		int iteration = 0;
@@ -170,10 +180,13 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 				Q.addAll(successorStatesList);
 			}		
 		}
-		System.out.println("A-Star takes "+iteration+" iterations");
+		long end = System.currentTimeMillis();
+		System.out.println("A-Star takes "+iteration+" iterations in "+(end-begin)+" ms");
 		return plan;
 	}
-*/	
+
+	
+/*	
 	private Plan astarPlan(Vehicle vehicle, TaskSet tasks) {
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
@@ -188,6 +201,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			iteration ++;
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
+				break;
 			}
 			State analysedState = Q.poll();
 			if (analysedState.isFinal) {
@@ -210,7 +224,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		System.out.println("A-Star takes "+iteration+" iterations");
 		return plan;
 	}
-
+*/
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
 		

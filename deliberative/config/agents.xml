@@ -16,7 +16,7 @@
 	<agent name="deliberative-random">
 		<set class-path="bin/"></set>
 		<set class-name="template.DeliberativeTemplate"></set>
-		<set algorithm="BFS"></set>
+		<set algorithm="NAIVE"></set>
 	</agent>
 
 </agents>
