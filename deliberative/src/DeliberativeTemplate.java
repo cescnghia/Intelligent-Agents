@@ -106,7 +106,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
-		boolean finalNode = false;
+		boolean finalState = false;
 		LinkedList<State> Q = new LinkedList<State>();
 		ArrayList<State> C = new ArrayList<State>();
 
@@ -114,20 +114,22 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		Q.add(currentState);
 		
 		int iteration = 0;
-		while(!finalNode){
+		while(!finalState){
 			iteration ++;
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
 				break;
 			}
 			State analysedState = Q.poll();
+			
 			if (analysedState.isFinal()) {
 				System.out.println("Final State, the cost is: "+analysedState.mCost);
 				plan = analysedState.getPlan();
-				finalNode = true;
+				finalState = true;
 			}
 			if (! C.contains(analysedState)){
 				C.add(analysedState);
+				
 				for (State s : analysedState.succ())
 					if (! Q.contains(s))
 						Q.add(s);
@@ -137,7 +139,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		System.out.println("A-Star takes "+iteration+" iterations in "+(end-begin)+" ms");
 		return plan;
 	}
-	
+
 	private Plan astarPlan(Vehicle vehicle, TaskSet tasks){
 		// time
 		long begin = System.currentTimeMillis();
@@ -145,7 +147,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		City currentCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(currentCity);
 		int iteration = 0;
-		boolean finalNode = false;
+		boolean finalState = false;
 		PriorityQueue<State> Q = new PriorityQueue<State>(new Comparator<State>() {
 			@Override
 			public int compare(State o1, State o2) {
@@ -156,7 +158,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		State currentState = new State(vehicle, tasks, currentCity);
 		Q.add(currentState);
 		
-		while (! finalNode){
+		while (! finalState){
 			iteration++;
 			if ( Q.isEmpty()) {
 				System.out.println("Failure !!!!");
@@ -167,7 +169,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			// Final state => return the plan
 			if (analysedState.isFinal()) {
 				System.out.println("Final State, the cost is: "+analysedState.mCost);
-				finalNode = true;
+				finalState = true;
 				plan = analysedState.getPlan();
 			}
 			
@@ -176,15 +178,17 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 				hasLowerCost = analysedState.mCost < C.get(C.indexOf(analysedState)).mCost;
 			}
 			
-			if(!C.contains(analysedState) || hasLowerCost){
+			if( (!C.contains(analysedState)) || hasLowerCost){
 
 				C.add(analysedState);
 				List<State> successorStatesList = analysedState.succ();
+				
 				//Merge
 				for (State s1 : successorStatesList){
 					if (! Q.contains(s1))
 						Q.add(s1);
-				}
+				}	
+			
 			}		
 		}
 		long end = System.currentTimeMillis();
@@ -192,46 +196,6 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		return plan;
 	}
 
-	
-/*	
-	private Plan astarPlan(Vehicle vehicle, TaskSet tasks) {
-		City currentCity = vehicle.getCurrentCity();
-		Plan plan = new Plan(currentCity);
-		boolean finalNode = false;
-		LinkedList<State> Q = new LinkedList<State>();
-		ArrayList<State> C = new ArrayList<State>();
-
-		State currentState = new State(vehicle, tasks, currentCity);
-		Q.add(currentState);
-		int iteration = 0;
-		while(!finalNode){
-			iteration ++;
-			if(Q.isEmpty()){
-				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
-				break;
-			}
-			State analysedState = Q.poll();
-			if (analysedState.isFinal) {
-				System.out.println("isFinal");
-				plan = analysedState.getPlan();
-				finalNode = true;
-			}
-			boolean hasLowerCost = false;
-			if(C.contains(analysedState)){
-				hasLowerCost = analysedState.cost < C.get(C.indexOf(analysedState)).cost;
-			}
-			if(!C.contains(analysedState) || hasLowerCost){
-				C.add(analysedState);
-				List<State> successorStatesList = analysedState.succ();
-				Collections.sort(successorStatesList);
-				Q.addAll(successorStatesList);
-				Collections.sort(Q);
-			}
-		}
-		System.out.println("A-Star takes "+iteration+" iterations");
-		return plan;
-	}
-*/
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
 		
