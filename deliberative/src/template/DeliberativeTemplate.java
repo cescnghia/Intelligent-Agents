@@ -113,8 +113,9 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		State currentState = new State(vehicle, tasks, currentCity);
 		Q.add(currentState);
 		
+		double optimalCostTmp = 0;
 		int iteration = 0;
-		while(!finalState){
+		while(!Q.isEmpty()){
 			iteration ++;
 			if(Q.isEmpty()){
 				System.out.println("Failure of the bfsPlan because Q is empty -> impossible to reach a final node");
@@ -123,9 +124,15 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			State analysedState = Q.poll();
 			
 			if (analysedState.isFinal()) {
-				System.out.println("Final State, the cost is: "+analysedState.cost);
-				plan = analysedState.getPlan();
-				finalState = true;
+				if(optimalCostTmp == 0) {
+					optimalCostTmp = analysedState.cost;
+					plan = analysedState.getPlan();
+				} else {
+					if(optimalCostTmp > analysedState.cost) {
+						optimalCostTmp = analysedState.cost;
+						plan = analysedState.getPlan();
+					}
+				}
 			}
 			if (! C.contains(analysedState)){
 				C.add(analysedState);
@@ -135,6 +142,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 						Q.add(s);
 			}
 		}
+		System.out.println("Final State, the cost is: "+optimalCostTmp);
 		long end = System.currentTimeMillis();
 		System.out.println("A-Star takes "+iteration+" iterations in "+(end-begin)+" ms");
 		return plan;
