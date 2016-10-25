@@ -52,49 +52,8 @@ public class State implements Comparable<State> {
 
 		this.isFinal = availableTasks.isEmpty() && mCarriedTasks.isEmpty();
 		
-		double heuristicTmp = 0;
-		Task heuristicTask = null;
-		boolean isPickupTask = false;
-		int heuristicFreeWeight = this.mFreeWeight;
-		City heuristicCityTmp = currentCity;
-		TaskSet heuristicAvailableTasks = availableTasks.clone();
-		TaskSet heuristicCarriedTasks = availableTasks.clone();
-		int totalTaskNb = heuristicCarriedTasks.size() + heuristicAvailableTasks.size();
-		Plan heuristicPlan = new Plan(currentCity);
-		while(heuristicAvailableTasks.size() != 0 || heuristicCarriedTasks.size() != 0){
-//			System.out.println("-----------"+heuristicAvailableTasks+heuristicCarriedTasks);
-			heuristicTmp = 0;
-			for (Task ta : heuristicAvailableTasks) {
-				if(heuristicFreeWeight > ta.weight){
-					double tmpCost = (heuristicCityTmp.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm();
-					if(heuristicTmp <= tmpCost) {
-						heuristicTmp = tmpCost;
-						heuristicTask = ta;
-						isPickupTask = true;
-						heuristicCityTmp = ta.deliveryCity;
-					}
-				}
-			}
-			for(Task tc: heuristicCarriedTasks){
-				double tmpCost = heuristicCityTmp.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
-				if(heuristicTmp <= tmpCost) {
-					heuristicTmp = tmpCost;
-					heuristicTask = tc;
-					isPickupTask = false;
-					heuristicCityTmp = tc.deliveryCity;
-				}
-			}
-			if(isPickupTask) {
-				heuristicPlan.appendPickup(heuristicTask);
-				heuristicAvailableTasks.remove(heuristicTask);
-			} else {
-				heuristicFreeWeight = heuristicFreeWeight + heuristicTask.weight;
-				heuristicCarriedTasks.remove(heuristicTask);
-			}
-			heuristicPlan.appendDelivery(heuristicTask);
-			
-		}
-		this.heuristicCost = heuristicPlan.totalDistance()*mVehicle.costPerKm()/totalTaskNb;
+		this.heuristicCost = calculateHeuristic(availableTasks.clone(), availableTasks.clone(), currentCity);
+
 	}
 	
 	public Plan getPlan() {
@@ -124,17 +83,22 @@ public class State implements Comparable<State> {
 		this.mFreeWeight = freeWeight;
 		this.isFinal = (mAvailableTasks.isEmpty() && mCarriedTasks.isEmpty());
 		
+		this.heuristicCost = calculateHeuristic(availableTasks.clone(), availableTasks.clone(), currentCity);
+
+	}
+	
+	public double calculateHeuristic(
+			TaskSet heuristicAvailableTasks,
+			TaskSet heuristicCarriedTasks,
+			City heuristicCityTmp
+			) {
 		double heuristicTmp = 0;
 		Task heuristicTask = null;
 		boolean isPickupTask = false;
 		int heuristicFreeWeight = this.mFreeWeight;
-		City heuristicCityTmp = currentCity;
-		TaskSet heuristicAvailableTasks = availableTasks.clone();
-		TaskSet heuristicCarriedTasks = availableTasks.clone();
 		int totalTaskNb = heuristicCarriedTasks.size() + heuristicAvailableTasks.size();
-		Plan heuristicPlan = new Plan(currentCity);
+		Plan heuristicPlan = new Plan(heuristicCityTmp);
 		while(heuristicAvailableTasks.size() != 0 || heuristicCarriedTasks.size() != 0){
-//			System.out.println("-----------"+heuristicAvailableTasks+heuristicCarriedTasks);
 			heuristicTmp = 0;
 			for (Task ta : heuristicAvailableTasks) {
 				if(heuristicFreeWeight > ta.weight){
@@ -165,8 +129,7 @@ public class State implements Comparable<State> {
 			}
 			heuristicPlan.appendDelivery(heuristicTask);
 		}
-		this.heuristicCost = heuristicPlan.totalDistance()*mVehicle.costPerKm()/totalTaskNb;
-
+		return heuristicPlan.totalDistance()*mVehicle.costPerKm()/totalTaskNb;
 	}
 	
 	public boolean isFinal() {
