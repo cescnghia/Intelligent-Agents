@@ -131,6 +131,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 					if(optimalCostTmp > analysedState.cost) {
 						optimalCostTmp = analysedState.cost;
 						plan = analysedState.getPlan();
+						
 					}
 				}
 			}
