@@ -123,7 +123,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			State analysedState = Q.poll();
 			
 			if (analysedState.isFinal()) {
-				System.out.println("Final State, the cost is: "+analysedState.mCost);
+				System.out.println("Final State, the cost is: "+analysedState.cost);
 				plan = analysedState.getPlan();
 				finalState = true;
 			}
@@ -168,14 +168,14 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			State analysedState = Q.poll();
 			// Final state => return the plan
 			if (analysedState.isFinal()) {
-				System.out.println("Final State, the cost is: "+analysedState.mCost);
+				System.out.println("Final State, the cost is: "+analysedState.cost);
 				finalState = true;
 				plan = analysedState.getPlan();
 			}
 			
 			boolean hasLowerCost = false;
 			if(C.contains(analysedState)){
-				hasLowerCost = analysedState.mCost < C.get(C.indexOf(analysedState)).mCost;
+				hasLowerCost = analysedState.cost < C.get(C.indexOf(analysedState)).cost;
 			}
 			
 			if( (!C.contains(analysedState)) || hasLowerCost){

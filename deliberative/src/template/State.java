@@ -25,16 +25,17 @@ public class State implements Comparable<State> {
 	private TaskSet mCarriedTasks;
 	private City mCurrentCity;
 	private int mFreeWeight;
+	private int mWeight;
 	private Plan mPlan;
 	private City mInitialCity;
 	public boolean isFinal;
-	public double mCost;
-	public double mHeuristicCost;
+	public double cost;
+	public double heuristicCost;
 	
 	public State(Vehicle vehicule, TaskSet availableTasks, City currentCity) {
 		this.mPlan = new Plan(currentCity);
 		this.mInitialCity = currentCity;
-		this.mCost = 0;
+		this.cost = 0;
 
 		this.mVehicle = vehicule;
 		this.mAvailableTasks = availableTasks;
@@ -42,31 +43,25 @@ public class State implements Comparable<State> {
 		
 		this.mCarriedTasks = this.mVehicle.getCurrentTasks(); 
 		
-		int sumWeight = 0;
+		this.mWeight = 0;
 		
 		for (Task task: this.mCarriedTasks) {
-			sumWeight += task.weight;
+			this.mWeight += task.weight;
 		}
-		this.mFreeWeight = this.mVehicle.capacity() - sumWeight;	
+		this.mFreeWeight = this.mVehicle.capacity() - this.mWeight;	
 
 		this.isFinal = availableTasks.isEmpty() && mCarriedTasks.isEmpty();
 		
-		double minCostPickUp = Double.MAX_VALUE;
-		double minCostDelivery = Double.MAX_VALUE;
-		
-		for (Task ta : mAvailableTasks) {
-			double tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm();
-			if(tmpCost < minCostPickUp) 
-				minCostPickUp = tmpCost;
+		double heuristicTmp = 0;
+		for (Task ta : availableTasks) {
+			double tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm() - ta.reward;
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
 		}
-
 		for(Task tc: mCarriedTasks){
-			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
-			if(tmpCost < minCostDelivery) 
-				minCostDelivery = tmpCost;
+			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm() - tc.reward;
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
 		}
-
-		this.mHeuristicCost = Double.min(minCostPickUp, minCostDelivery);
+		this.heuristicCost = heuristicTmp;
 	}
 	
 	public Plan getPlan() {
@@ -83,30 +78,30 @@ public class State implements Comparable<State> {
 					double cost) {
 		this.mPlan = plan;
 		this.mInitialCity = initialCity;
-		this.mCost = cost;
+		this.cost = cost;
 		
 		this.mVehicle = vehicule;
 		this.mAvailableTasks = availableTasks;
 		this.mCurrentCity = currentCity;
+		this.mWeight = 0;
 		this.mCarriedTasks = carriedTasks;
+		for (Task task: this.mCarriedTasks) {
+			this.mWeight += task.weight;
+		}
+		this.mFreeWeight = this.mVehicle.capacity() - this.mWeight;
 		this.mFreeWeight = freeWeight;
 		this.isFinal = (mAvailableTasks.isEmpty() && mCarriedTasks.isEmpty());
 		
-		double minCostPickUp = Double.MAX_VALUE;
-		double minCostDelivery = Double.MAX_VALUE;
-		double tmpCost = 0;
-		
-		for (Task ta : mAvailableTasks) {
-			tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm();
-			if (tmpCost < minCostPickUp) 
-				minCostPickUp = tmpCost;
+		double heuristicTmp = 0;
+		for (Task ta : availableTasks) {
+			double tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm();
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
 		}
 		for(Task tc: mCarriedTasks){
-			tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
-			if (tmpCost < minCostDelivery) 
-				minCostDelivery = tmpCost;
+			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
+			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
 		}
-		this.mHeuristicCost = Double.min(minCostDelivery,minCostPickUp);
+		this.heuristicCost = heuristicTmp;
 
 	}
 	
@@ -151,7 +146,7 @@ public class State implements Comparable<State> {
 			newPlan.appendPickup(taskAvailable);
 			// set the cost
 			double newCost = this.mCurrentCity.distanceTo(taskAvailable.pickupCity) * this.mVehicle.costPerKm();
-			newCost += this.mCost;
+			newCost += this.cost;
 			// set the new city
 			City newCity = taskAvailable.pickupCity;
 			// set the new availableTasks Set by removing the picked one
@@ -184,7 +179,7 @@ public class State implements Comparable<State> {
 			newPlan.appendDelivery(taskDelivrable);
 			// set the cost
 			double newCost = mCurrentCity.distanceTo(taskDelivrable.deliveryCity) * this.mVehicle.costPerKm();
-			newCost += this.mCost;
+			newCost += this.cost;
 			// set the new city
 			City newCity = taskDelivrable.deliveryCity;
 			// set the new availableTasks which is the same as previously
@@ -235,6 +230,8 @@ public class State implements Comparable<State> {
 				return false;
 		} else if (!mCurrentCity.equals(other.mCurrentCity))
 			return false;
+		if (mWeight != other.mWeight)
+			return false;
 		if (mFreeWeight != other.mFreeWeight)
 			return false;
 		return true;
@@ -244,10 +241,10 @@ public class State implements Comparable<State> {
 	// where g(n) = cost of this agent so far and h(n) = heuristic cost
 	@Override
 	public int compareTo(State o) {
-		if(this.mCost + this.mHeuristicCost < o.mCost + o.mHeuristicCost) {
+		if((this.cost + this.heuristicCost) < (o.cost + o.heuristicCost)) {
 			return -1;
 		} 
-	    else if(o.mCost + o.mHeuristicCost < this.mCost + this.mHeuristicCost) {
+	    else if((o.cost + o.heuristicCost) < (this.cost + this.heuristicCost)) {
 	    	return 1;
 	    }
 	    return 0;
@@ -255,7 +252,7 @@ public class State implements Comparable<State> {
 
 	@Override
 	public String toString() {
-		return "State [currentCity=" + mCurrentCity + ", cost=" + mCost + "]";
+		return "State [currentCity=" + mCurrentCity + ", cost=" + cost + "]";
 	}
 
 	@Override
