@@ -54,11 +54,11 @@ public class State implements Comparable<State> {
 		
 		double heuristicTmp = 0;
 		for (Task ta : availableTasks) {
-			double tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm() - ta.reward;
+			double tmpCost = (currentCity.distanceTo(ta.pickupCity) + ta.pathLength())*mVehicle.costPerKm();
 			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
 		}
 		for(Task tc: mCarriedTasks){
-			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm() - tc.reward;
+			double tmpCost = currentCity.distanceTo(tc.deliveryCity)*mVehicle.costPerKm();
 			if(heuristicTmp < tmpCost) heuristicTmp = tmpCost;
 		}
 		this.heuristicCost = heuristicTmp;
