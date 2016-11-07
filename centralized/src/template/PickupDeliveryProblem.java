@@ -1,10 +1,12 @@
 package template;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Random;
 
 import template.Task_.Action;
@@ -39,6 +41,7 @@ public class PickupDeliveryProblem {
 	
 	public double getCost() { return this.mCost; }
 	
+	/*
 	// Give all the task to the biggest vehicle
 	public A SelectInitialSolution(){
 		
@@ -70,6 +73,43 @@ public class PickupDeliveryProblem {
 		//return a "initial" plan
 		return new A(map);
 	}
+	*/
+	
+	// Give all tasks to the biggest vehicle, if this biggest vehicle is "full", we looking for another next biggest and so on.....
+	public A SelectInitialSolution(){
+
+		LinkedList<Task_> tasks = new LinkedList<Task_>();
+		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
+		PriorityQueue<Vehicle> queue = new PriorityQueue<Vehicle>(new Comparator<Vehicle>() {
+			@Override
+			public int compare(Vehicle o1, Vehicle o2) {
+				return o2.capacity() - o1.capacity()  ;
+			}
+		});
+		
+		for (Vehicle v : mVehicles)
+			map.put(v, new LinkedList<Task_>());
+				
+		queue.addAll(mVehicles);
+		Vehicle vehicle = queue.poll();
+		int capacity = vehicle.capacity();
+		for (Task task : mTasks){
+			if (capacity - task.weight < 0){
+				map.put(vehicle, tasks);
+				vehicle = queue.poll();
+				capacity = vehicle.capacity();
+				tasks = new LinkedList<Task_>();
+			}
+			capacity -= task.weight;
+			tasks.add(new Task_(task, Action.DELIVERY));
+			tasks.add(new Task_(task, Action.PICKUP));
+			map.put(vehicle, tasks);
+		}
+		
+		return new A(map);
+	}
+	
+	
 	// Give all tasks to all vehicles randomly (Another approach of SelectInitialSolution() method)
 	public A taskDistributionByRandom(){
 		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
@@ -101,11 +141,12 @@ public class PickupDeliveryProblem {
 	// Apply Stochastic Local Search Algorithm
 	public A StochasticLocalSearch(){
 		
-		A plan = taskDistributionByRandom();//SelectInitialSolution();
+		A plan = SelectInitialSolution();// taskDistributionByRandom();
 		int iter = MAX_ITER;
 		
 		for (int i = 0; i < iter ; i++){
 			A oldPlan = new A(plan);
+			check(oldPlan);
 			ArrayList<A> plans = ChooseNeighbors(oldPlan);
 			plan = LocalChoice(oldPlan, plans);
 		}
