@@ -68,23 +68,22 @@ public class A {
 		double cost = 0.0;
 		for (Vehicle v : mVehicleTasks.keySet()){
 			// Go to pickup a task at the beginning
-			cost += (v.homeCity().distanceTo(mVehicleTasks.get(v).getFirst().getTask().pickupCity));
+			cost += (v.homeCity().distanceTo(mVehicleTasks.get(v).getFirst().getTask().pickupCity))*v.costPerKm();
 			LinkedList<Task_> tasks = this.mVehicleTasks.get(v);
 			// pathLength + path
 			for (int i = 0 ; i < tasks.size() - 1 ; i++ ){
 				Task_ task = tasks.get(i);
 				Task_ nextTask = tasks.get(i+1);
 				if (task.getAction() == Action.PICKUP && nextTask.getAction() == Action.PICKUP){
-					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity) ;
+					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity)*v.costPerKm();
 				} else if (task.getAction() == Action.DELIVERY && nextTask.getAction() == Action.PICKUP){
-					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity) ;
+					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity)*v.costPerKm();
 				} else if (task.getAction() == Action.PICKUP && nextTask.getAction() == Action.DELIVERY){
-					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity) ;
+					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity)*v.costPerKm();
 				} else {
-					cost += task.getTask().deliveryCity.distanceTo(nextTask.getTask().deliveryCity);
+					cost += task.getTask().deliveryCity.distanceTo(nextTask.getTask().deliveryCity)*v.costPerKm();
 				}
 			}
-			cost *= v.costPerKm();
 		}
 		
 		return cost;
