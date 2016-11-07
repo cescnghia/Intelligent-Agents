@@ -42,10 +42,11 @@ public class CentralizedTemplate implements CentralizedBehavior {
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config\\settings_default.xml");
+            ls = Parsers.parseSettings("config/settings_default.xml");
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
+            System.out.println(exc.getMessage());
         }
         
         // the setup method cannot last more than timeout_setup milliseconds
@@ -63,15 +64,15 @@ public class CentralizedTemplate implements CentralizedBehavior {
         long time_start = System.currentTimeMillis();
         
         System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-//      Plan planVehicle1 = naivePlan(vehicles.get(0), tasks);
-
         PickupDeliveryProblem pdp = new PickupDeliveryProblem(vehicles, tasks);
+
         pdp.StochasticLocalSearch();
         A bestA = pdp.getBestA();
         System.out.println("Cost is: "+pdp.getCost());
         
         List<Plan> plans = new ArrayList<Plan>();
         for (Vehicle v : vehicles){
+
         	LinkedList<Task_> tasks_ = bestA.getTasksOfVehicle(v);
         	if (tasks_ != null)
         		plans.add(makePlan(v, tasks_ ));
@@ -89,7 +90,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
     }
     
    
-
+    
     private Plan makePlan(Vehicle v, LinkedList<Task_> tasks) {
 		City currentCity = v.homeCity();
 		Plan plan = new Plan(currentCity);

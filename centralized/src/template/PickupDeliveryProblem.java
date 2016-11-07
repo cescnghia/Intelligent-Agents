@@ -21,30 +21,32 @@ public class PickupDeliveryProblem {
 	private double mCost;
 	
 	private static final double P = 0.4;
-	private static final int MAX_ITER = 3000;
+	private static final int MAX_ITER = 5000;
 	
+	/**Constructor  
+	 * 
+	 * @param vehicles: all vehicles
+	 * @param tasks: all tasks
+	 */
 	public PickupDeliveryProblem(List<Vehicle> vehicles, TaskSet tasks){
 		this.mVehicles = new ArrayList<Vehicle>(vehicles);
 		this.mTasks = tasks;
-		this.mCost = Integer.MAX_VALUE;
+		this.mCost = Double.MAX_VALUE;
 		this.mBestA = null;
 	}
 	
-	public A getBestA(){
-		return this.mBestA;
-	}
+	public A getBestA() { return this.mBestA; }
 	
-	public double getCost(){
-		return this.mCost;
-	}
+	public double getCost() { return this.mCost; }
 	
-	// Give all the task for the biggest vehicle
+	// Give all the task to the biggest vehicle
 	public A SelectInitialSolution(){
 		
 		Vehicle vehicle = null;
 		LinkedList<Task_> tasks = new LinkedList<Task_>();
 		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
 		
+		// Find the biggest vehicle (depend on it's load)
 		int biggestCapacity = Integer.MIN_VALUE;
 		for (Vehicle v : this.mVehicles){
 			if (v.capacity() > biggestCapacity){
@@ -53,110 +55,161 @@ public class PickupDeliveryProblem {
 			}
 		}
 		
+		// Assign all tasks 
 		for (Task t : this.mTasks){
-			tasks.add(new Task_(t, Action.PICKUP));
 			tasks.add(new Task_(t, Action.DELIVERY));
+			tasks.add(new Task_(t, Action.PICKUP));
 		}
+		// Initial for these others vehicles
+		for (Vehicle v : mVehicles)
+			if (v != vehicle)
+				map.put(v, new LinkedList<Task_>());
 		
 		map.put(vehicle, tasks);
+		
+		//return a "initial" plan
+		return new A(map);
+	}
+	// Give all tasks to all vehicles randomly (Another approach of SelectInitialSolution() method)
+	public A taskDistributionByRandom(){
+		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
+		HashMap<Vehicle, Integer> load = new HashMap<Vehicle, Integer>();
+		
+		for (Vehicle v : mVehicles)
+				map.put(v, new LinkedList<Task_>());
+		
+		for (Vehicle v : mVehicles)
+			load.put(v, 0);
+		
+		Random rd = new Random();
+		
+		for (Task t : mTasks){
+			Vehicle v = mVehicles.get(rd.nextInt(mVehicles.size()));
+			while (load.get(v) + t.weight > v.capacity()){
+				v = mVehicles.get(rd.nextInt(mVehicles.size()));
+			}
+			load.put(v, load.get(v)+t.weight);
+			LinkedList<Task_> actualyList = map.get(v);
+			actualyList.add(new Task_(t, Action.DELIVERY));
+			actualyList.add(new Task_(t, Action.PICKUP));
+			map.put(v, actualyList);
+		}
 		
 		return new A(map);
 	}
 	
+	// Apply Stochastic Local Search Algorithm
 	public A StochasticLocalSearch(){
 		
-		A plan = SelectInitialSolution();
+		A plan = taskDistributionByRandom();//SelectInitialSolution();
 		int iter = MAX_ITER;
 		
 		for (int i = 0; i < iter ; i++){
-			A oldPlan = plan;
+			A oldPlan = new A(plan);
 			ArrayList<A> plans = ChooseNeighbors(oldPlan);
 			plan = LocalChoice(oldPlan, plans);
 		}
-		
-		return plan;
-		
+	
+		return plan;	
 	}
-
+	
+	// Have to choice the best plan with probability p, or return the old plan with probability = (1-p)
 	private A LocalChoice(A old, ArrayList<A> setOfPlan) {
-		A choice = old;
 		
-		double minCost = Double.MIN_VALUE;
-		A minCostPlan = null;
+		A bestChoice = new A(old);
+		
+		// Find the best plan based on the objective function
+		double minCost = Double.MAX_VALUE;
+		A minCostPlan = new A(old);
 		for (A a : setOfPlan){
-			double cost = a.cost();
-			if (cost < minCost) {
-				minCost = cost;
-				minCostPlan = a;
+			if (a != null){
+				double cost = a.cost();
+				if (cost < minCost) {
+					minCost = cost;
+					minCostPlan = new A(a);
+				}
 			}
 		}
-		
+
 		Random rd = new Random();
 		double d = rd.nextDouble();
 		
-		if (d < P){
-			choice = minCostPlan;
+		if (d < P) {
+			bestChoice = minCostPlan;
 			if (minCost < this.mCost) {
 				this.mBestA = minCostPlan;
 				this.mCost = minCost;
 			}
-		} else {
-			choice = old;
-		}
-		return choice;
+		} 
+		
+		return bestChoice;
 	}
-
+	
+	
+	//Choose 
 	private ArrayList<A> ChooseNeighbors(A old) {
 		ArrayList<A> plans = new ArrayList<A>();
-		Random rd = new Random();
 		
+		//check(old);
+
+		Random rd = new Random();
 		Vehicle vehicle = null;
+		
 		while (true){ // Find a vehicle that has a task
 			vehicle = this.mVehicles.get(rd.nextInt(this.mVehicles.size()));
-			if (! old.getTasksOfVehicle(vehicle).isEmpty())
+			LinkedList<Task_> tasks = old.getTasksOfVehicle(vehicle);
+			if ( (tasks != null) && (!tasks.isEmpty()))
 				break;
 		}
 		
 		//Applying the changing vehicle operator
-		
 		for (Vehicle v : this.mVehicles){
-			if (v != vehicle && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight < v.capacity())){
+			if ( (v != vehicle) && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight < v.capacity())){
 				A newA = ChangingVehicle(old, vehicle, v);
-				if (checkConstraint(newA))
+				if ( (newA != null) && checkConstraint(newA))
 					plans.add(newA);
 			}
 		}
 		
 		//Applying the changing task order operator
-		
 		int numOfTask = old.getTasksOfVehicle(vehicle).size();
 		if (numOfTask >= 2){
-			for (int i = 1 ; i <= numOfTask-1 ; i++ ){
+			for (int i = 0 ; i < numOfTask ; i++ ){
 				for (int j = i+1; j < numOfTask ; j++){
 					A newA = ChangingTaskOrder(old, vehicle, i, j);
-					if (checkConstraint(newA))
+					if ( (newA != null ) && checkConstraint(newA))
 						plans.add(newA);
 				}
 			}
 		}
-		
+	
 		return plans;
 	}
 	
-	// Move 1st task of v1 to 1st task of v2
+	// Move the 1st task of v1 and append to the head of v2
 	private A ChangingVehicle(A a, Vehicle v1, Vehicle v2){
 		A newA = new A(a);
-		
+
+		// There is no task on v1
+		if (newA.getTasksOfVehicle(v1)==null || newA.getTasksOfVehicle(v1).isEmpty())
+			return newA;
+
 		Task_ taskToMove = newA.getTasksOfVehicle(v1).getFirst();
-		
+
+		if (! newA.getTasksOfVehicle(v1).contains(taskToMove.getInverse()))
+			throw new IllegalArgumentException("2 actions of a task is not in the same vehicle");
+
 		// Have to remove 2 actions (pickup and delivery) for this task in v1...
 		newA.removeTaskFromVehicle(taskToMove, v1);
 		newA.removeTaskFromVehicle(taskToMove.getInverse(), v1);
-		
 		// and add to the head of v2, add action delivery first...
-		newA.addTaskForVehicle(taskToMove.getInverse(), v2);
-		newA.addTaskForVehicle(taskToMove, v2);
-		
+		if (taskToMove.getAction() == Action.PICKUP){
+			newA.addTaskForVehicle(taskToMove.getInverse(), v2);
+			newA.addTaskForVehicle(taskToMove, v2);
+		} else {
+			newA.addTaskForVehicle(taskToMove, v2);
+			newA.addTaskForVehicle(taskToMove.getInverse(), v2);
+		}
 		return newA;	
 	}
 	
@@ -164,6 +217,10 @@ public class PickupDeliveryProblem {
 	private A ChangingTaskOrder(A a, Vehicle v, int idx1, int idx2){
 		
 		A newA = new A(a);
+		
+		// There is no task on v
+		if (newA.getTasksOfVehicle(v)==null || newA.getTasksOfVehicle(v).isEmpty())
+			return newA;
 		
 		LinkedList<Task_> tasks = newA.getTasksOfVehicle(v);
 		
@@ -181,45 +238,56 @@ public class PickupDeliveryProblem {
 		if (task2.getAction() == Action.DELIVERY && tasks.indexOf(task2.getInverse()) > idx1)
 			return null;
 		
-		// Otherwise fell free to swap
+		// Otherwise feel free to swap
 		newA.changeOrderOfTwoTasks(idx1, idx2, v);
 		
 		return newA;
 	}
 	
+	// Method to check constraint...
 	private boolean checkConstraint(A a){
 		
-		for (Map.Entry<Vehicle, LinkedList<Task_>> entry : a.getA().entrySet()){
+		for (Map.Entry<Vehicle, LinkedList<Task_>> entry : a.getMap().entrySet()){
+
 			Vehicle vehicle = entry.getKey();
 			LinkedList<Task_> tasks = entry.getValue();
 			HashMap<Task, Integer> map = new HashMap<Task, Integer>();
-			int weight = 0;
 			
-			if (tasks != null){
+			if ( (tasks != null) && (!tasks.isEmpty()) ){
+				int weight = 0;
+				
 				for (int i = 0 ; i < tasks.size(); i++){
-					Task task = tasks.get(i).getTask();
+					Task_ task_ = tasks.get(i);
+					Task task = task_.getTask();
 					
 					//check condition : one task can not be taken by two vehicles
 					if (! map.containsKey(task)){
 						map.put(task, 0);
 					} else {
 						int temp = map.get(task) + 1;
-						if (temp > 2) 
+						if (temp > 2) //there is another vehicle that delivery/pickup this task
 							return false;
 						else
 							map.put(task, temp);
 					}
-					
+				
 					//check condition : capacity of a vehicle
-					if (tasks.get(i).getAction() == Action.PICKUP){
+					if (task_.getAction() == Action.DELIVERY){
 						weight += task.weight;
-					}
-					
+					}	
 				}
+
+				if (weight > vehicle.capacity())
+					return false;
 			}
-			if (weight > vehicle.capacity())
-				return false;		
 		}
 		return true;
+	}
+	
+	public void check(A a){
+		System.out.println("**************************");
+		System.out.println("Number of vehicle is "+a.getMap().keySet().size());
+		for (Map.Entry<Vehicle, LinkedList<Task_>> entry : a.getMap().entrySet())
+			System.out.println("Vehicle "+entry.getKey().id()+" has "+entry.getValue().size()+" tasks");
 	}
 }
