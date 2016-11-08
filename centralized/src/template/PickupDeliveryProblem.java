@@ -62,6 +62,8 @@ public class PickupDeliveryProblem {
 		
 		// Assign all tasks 
 		for (Task t : this.mTasks){
+			if (t.weight > vehicle.capacity())
+				throw new IllegalArgumentException("The problem is unsolvable because the task is too heavy");
 			tasks.add(new Task_(t, Action.DELIVERY));
 			tasks.add(new Task_(t, Action.PICKUP));
 		}
@@ -76,44 +78,8 @@ public class PickupDeliveryProblem {
 		return new A(map);
 	}
 	
-	
-	// Give all tasks to the biggest vehicle, if this biggest vehicle is "full", we looking for another next biggest and so on.....
+	// Give all tasks to all vehicles randomly
 	public A SelectInitialSolution_2(){
-
-		LinkedList<Task_> tasks = new LinkedList<Task_>();
-		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
-		PriorityQueue<Vehicle> queue = new PriorityQueue<Vehicle>(new Comparator<Vehicle>() {
-			@Override
-			public int compare(Vehicle o1, Vehicle o2) {
-				return o2.capacity() - o1.capacity()  ;
-			}
-		});
-		
-		for (Vehicle v : mVehicles)
-			map.put(v, new LinkedList<Task_>());
-				
-		queue.addAll(mVehicles);
-		Vehicle vehicle = queue.poll();
-		int capacity = vehicle.capacity();
-		for (Task task : mTasks){
-			if (capacity - task.weight < 0){
-				map.put(vehicle, tasks);
-				vehicle = queue.poll();
-				capacity = vehicle.capacity();
-				tasks = new LinkedList<Task_>();
-			}
-			capacity -= task.weight;
-			tasks.add(new Task_(task, Action.DELIVERY));
-			tasks.add(new Task_(task, Action.PICKUP));
-			map.put(vehicle, tasks);
-		}
-		
-		return new A(map);
-	}
-	
-	
-	// Give all tasks to all vehicles randomly (Another approach of SelectInitialSolution() method)
-	public A SelectInitialSolution_3(){
 		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
 		HashMap<Vehicle, Integer> load = new HashMap<Vehicle, Integer>();
 		
@@ -155,36 +121,38 @@ public class PickupDeliveryProblem {
 		return plan;	
 	}
 	
-	// Have to choice the best plan with probability p, or return the old plan with probability = (1-p)
+	// Have to choice the best plan (min cost) AMONG the setOfPlan with probability P, or return the old plan with probability = (1-P)
 	private A LocalChoice(A old, ArrayList<A> setOfPlan) {
 		
-		A bestChoice = new A(old);
-		
-		// Find the best plan based on the objective function
-		double minCost = Double.MAX_VALUE;
-		A minCostPlan = new A(old);
-		for (A a : setOfPlan){
-			if (a != null){
-				double cost = a.cost();
-				if (cost < minCost) {
-					minCost = cost;
-					minCostPlan = a;
-				}
+		PriorityQueue<A> queue = new PriorityQueue<A>(new Comparator<A>() {
+			@Override
+			// min cost !!!!
+			public int compare(A o1, A o2) {
+				if(o1.cost() < o2.cost())
+					return -1;
+				else if (o2.cost()==o1.cost())
+					return 0;
+				else 
+					return 1;
 			}
-		}
-
+		});
+		queue.addAll(setOfPlan);
+		
+		A choice = old;
+		
 		Random rd = new Random();
 		double d = rd.nextDouble();
-		
-		if (d < P) {
-			bestChoice = minCostPlan;
-			if (minCost < this.mCost) {
-				this.mBestA = minCostPlan;
-				this.mCost = minCost;
+
+		if ( (d < P) && (! queue.isEmpty()) ) {
+			choice = queue.poll();
+			// Update min cost if necessary....
+			if (choice.cost() < this.mCost) {
+				this.mBestA = choice;
+				this.mCost = choice.cost();
 			}
-		} 
+		}
 		
-		return bestChoice;
+		return choice;
 	}
 	
 	
@@ -206,6 +174,7 @@ public class PickupDeliveryProblem {
 		
 		//Applying the changing vehicle operator
 		for (Vehicle v : this.mVehicles){
+			//check if vehicle "v" can take the task of vehicle "vehicle" (weight compatible)
 			if ( (v != vehicle) && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight <= v.capacity())){
 				A newA = ChangingVehicle(old, vehicle, v);
 				if ( (newA != null) && checkConstraint(newA))
@@ -224,7 +193,7 @@ public class PickupDeliveryProblem {
 				}
 			}
 		}
-	
+		
 		return plans;
 	}
 	
@@ -241,9 +210,10 @@ public class PickupDeliveryProblem {
 		if (! newA.getTasksOfVehicle(v1).contains(taskToMove.getInverse()))
 			throw new IllegalArgumentException("2 actions of a task is not in the same vehicle");
 
-		// Have to remove 2 actions (pickup and delivery) for this task in v1...
+		// Have to remove 2 actions (pickup and delivery) of the task "taskToMove" in v1...
 		newA.removeTaskFromVehicle(taskToMove, v1);
 		newA.removeTaskFromVehicle(taskToMove.getInverse(), v1);
+		
 		// and add to the head of v2, add action delivery first...
 		if (taskToMove.getAction() == Action.PICKUP){
 			newA.addTaskForVehicle(taskToMove.getInverse(), v2);
@@ -324,12 +294,5 @@ public class PickupDeliveryProblem {
 			}
 		}
 		return true;
-	}
-	
-	public void check(A a){
-		System.out.println("**************************");
-		System.out.println("Number of vehicle is "+a.getMap().keySet().size());
-		for (Map.Entry<Vehicle, LinkedList<Task_>> entry : a.getMap().entrySet())
-			System.out.println("Vehicle "+entry.getKey().id()+" has "+entry.getValue().size()+" tasks");
 	}
 }

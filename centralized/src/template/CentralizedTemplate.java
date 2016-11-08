@@ -75,7 +75,6 @@ public class CentralizedTemplate implements CentralizedBehavior {
         	if (tasks_ != null) {
         		Plan plan = makePlan(v, tasks_);
        			plans.add(plan);
-       			System.out.println("Plan of vehicle "+v.id()+" cost: " + plan.totalDistance() * v.costPerKm());
         	}
         }
         
