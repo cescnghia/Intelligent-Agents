@@ -23,7 +23,7 @@ public class PickupDeliveryProblem {
 	private double mCost;
 	
 	private static final double P = 0.4;
-	private static final int MAX_ITER = 5000;
+	private static final int MAX_ITER = 10000;
 	
 	/**Constructor  
 	 * 
@@ -41,9 +41,11 @@ public class PickupDeliveryProblem {
 	
 	public double getCost() { return this.mCost; }
 	
-	/*
-	// Give all the task to the biggest vehicle
-	public A SelectInitialSolution(){
+	
+	// Give all the task to the biggest vehicle 
+	//(have to change CAPACITY one of the vehicle to  = (# of task * 3)
+	
+	public A SelectInitialSolution_1(){
 		
 		Vehicle vehicle = null;
 		LinkedList<Task_> tasks = new LinkedList<Task_>();
@@ -73,10 +75,10 @@ public class PickupDeliveryProblem {
 		//return a "initial" plan
 		return new A(map);
 	}
-	*/
+	
 	
 	// Give all tasks to the biggest vehicle, if this biggest vehicle is "full", we looking for another next biggest and so on.....
-	public A SelectInitialSolution(){
+	public A SelectInitialSolution_2(){
 
 		LinkedList<Task_> tasks = new LinkedList<Task_>();
 		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
@@ -111,7 +113,7 @@ public class PickupDeliveryProblem {
 	
 	
 	// Give all tasks to all vehicles randomly (Another approach of SelectInitialSolution() method)
-	public A taskDistributionByRandom(){
+	public A SelectInitialSolution_3(){
 		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
 		HashMap<Vehicle, Integer> load = new HashMap<Vehicle, Integer>();
 		
@@ -141,12 +143,11 @@ public class PickupDeliveryProblem {
 	// Apply Stochastic Local Search Algorithm
 	public A StochasticLocalSearch(){
 		
-		A plan = SelectInitialSolution();// taskDistributionByRandom();
+		A plan = SelectInitialSolution_1();
 		int iter = MAX_ITER;
 		
 		for (int i = 0; i < iter ; i++){
 			A oldPlan = new A(plan);
-			check(oldPlan);
 			ArrayList<A> plans = ChooseNeighbors(oldPlan);
 			plan = LocalChoice(oldPlan, plans);
 		}
@@ -167,7 +168,7 @@ public class PickupDeliveryProblem {
 				double cost = a.cost();
 				if (cost < minCost) {
 					minCost = cost;
-					minCostPlan = new A(a);
+					minCostPlan = a;
 				}
 			}
 		}
@@ -205,7 +206,7 @@ public class PickupDeliveryProblem {
 		
 		//Applying the changing vehicle operator
 		for (Vehicle v : this.mVehicles){
-			if ( (v != vehicle) && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight < v.capacity())){
+			if ( (v != vehicle) && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight <= v.capacity())){
 				A newA = ChangingVehicle(old, vehicle, v);
 				if ( (newA != null) && checkConstraint(newA))
 					plans.add(newA);
@@ -313,9 +314,9 @@ public class PickupDeliveryProblem {
 					}
 				
 					//check condition : capacity of a vehicle
-					if (task_.getAction() == Action.DELIVERY){
+					if (task_.getAction() == Action.PICKUP){
 						weight += task.weight;
-					}	
+					} 
 				}
 
 				if (weight > vehicle.capacity())

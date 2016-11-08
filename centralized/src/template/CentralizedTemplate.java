@@ -62,24 +62,21 @@ public class CentralizedTemplate implements CentralizedBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
-        
-        System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-        PickupDeliveryProblem pdp = new PickupDeliveryProblem(vehicles, tasks);
 
+        PickupDeliveryProblem pdp = new PickupDeliveryProblem(vehicles, tasks);
         pdp.StochasticLocalSearch();
         A bestA = pdp.getBestA();
-        System.out.println("Cost is: "+pdp.getCost());
+        System.out.println("The minimun cost is: "+pdp.getCost());
         
         List<Plan> plans = new ArrayList<Plan>();
-        for (Vehicle v : vehicles){
 
+        for (Vehicle v : vehicles){
         	LinkedList<Task_> tasks_ = bestA.getTasksOfVehicle(v);
-        	if (tasks_ != null)
-        		plans.add(makePlan(v, tasks_ ));
-        }
-        
-        while (plans.size() < vehicles.size()) {
-            plans.add(Plan.EMPTY);
+        	if (tasks_ != null) {
+        		Plan plan = makePlan(v, tasks_);
+       			plans.add(plan);
+       			System.out.println("Plan of vehicle "+v.id()+" cost: " + plan.totalDistance() * v.costPerKm());
+        	}
         }
         
         long time_end = System.currentTimeMillis();
@@ -88,8 +85,6 @@ public class CentralizedTemplate implements CentralizedBehavior {
         
         return plans;
     }
-    
-   
     
     private Plan makePlan(Vehicle v, LinkedList<Task_> tasks) {
 		City currentCity = v.homeCity();

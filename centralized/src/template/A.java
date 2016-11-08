@@ -61,16 +61,17 @@ public class A {
 		this.mVehicleTasks.put(v, tasks);
 	}
 	
-	// compute cost 
+	/*--------COMPUTE COST OF THIS PLAN---------*/
 	
 	public double cost(){
 		double cost = 0.0;
+		
 		for (Vehicle v : mVehicleTasks.keySet()){
 			
-			if (mVehicleTasks.get(v).isEmpty())
+			if (mVehicleTasks.get(v).isEmpty()) //no task for this vehicle => continue
 				continue;
 			
-			// Go to pickup a task at the beginning
+			// Cost for going to pickup a task at the beginning
 			cost += (v.homeCity().distanceTo(mVehicleTasks.get(v).getFirst().getTask().pickupCity))*v.costPerKm();
 			LinkedList<Task_> tasks = this.mVehicleTasks.get(v);
 			
@@ -88,8 +89,7 @@ public class A {
 					cost += task.getTask().deliveryCity.distanceTo(nextTask.getTask().deliveryCity)*v.costPerKm();
 				}
 			}
-		}
-		
+		}	
 		return cost;
 	}
 }
