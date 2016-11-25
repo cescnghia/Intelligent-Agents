@@ -40,12 +40,9 @@ public class AuctionTemplate implements AuctionBehavior {
 	// Agent's parameters
 	private PickupDeliveryProblem myPDP;
 	
-	private double myBestCost;
-	private A myBestPlan;
-	
-	private A mBestOpponentPlan;
-	private double mBestOpponentCost;
-	private TaskSet mOpponentTaskSet;
+	private double myBestCost = Double.MAX_VALUE;
+	private A myBestPlan = null;
+
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
@@ -92,6 +89,9 @@ public class AuctionTemplate implements AuctionBehavior {
 			// we win for the task
 			// store the value of newCost and newPlan that we have computed in the method askPrice()
 			// continue the auction
+			
+			
+			//Code given by assistant
 			currentCity = previous.deliveryCity;
 			
 		} else { // Do Something
@@ -109,11 +109,11 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 		/*------------TO DO------------*/
 		
-		// add this new task to the old plan
+		// try to add this new task to the old plan
 		A newPlan = this.myPDP.addNewTask(task);
-		// compute new cost for this new plan
+		// and compute new cost for this new plan
 		double newCost = newPlan.cost();
-		// return a bid in function of new cost
+		// compute and return a bid in terms of new cost
 		
 		
 		

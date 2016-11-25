@@ -16,9 +16,19 @@ import logist.simulation.Vehicle;
   *
   */
 public class A {
+	
+	/*A plan is just a hash map of vehicle and list of task */
+	/*
+	 Ex : Vehicle 1 have to pick up and deliver task A, B
+	      Vehicle 2 have to pick up and deliver task C, E
+	      Vehicle 3 have to pick up and deliver task D
+	 */
 
 	private HashMap<Vehicle, LinkedList<Task_>> mVehicleTasks;
 	private List<Vehicle> mVehicles = new ArrayList<Vehicle>();
+	
+	
+	/*----------CONSTRUCTOR-----------*/
 	
 	public A(HashMap<Vehicle, LinkedList<Task_>> map){
 		this.mVehicleTasks = map;
@@ -35,15 +45,14 @@ public class A {
 		this.mVehicles = vehicles;
 	}
 	
-	public List<Vehicle> getVehicles() {return this.mVehicles ;}
+	/*----------GETTER-----------*/
 	
-	public HashMap<Vehicle, LinkedList<Task_>> getMap(){
-		return this.mVehicleTasks;
-	}
+	public List<Vehicle> getVehicles() { return this.mVehicles ; }
 	
-	public LinkedList<Task_> getTasksOfVehicle(Vehicle v){
-		return this.mVehicleTasks.get(v);
-	}
+	public HashMap<Vehicle, LinkedList<Task_>> getMap() { return this.mVehicleTasks; }
+	
+	public LinkedList<Task_> getTasksOfVehicle(Vehicle v){ return this.mVehicleTasks.get(v); }
+	
 	
 	/*------ALL TRANSFORMATIONS METHODS------*/
 	

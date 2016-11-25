@@ -16,6 +16,15 @@ import logist.task.TaskSet;
 
 public class PickupDeliveryProblem {
 
+	/*
+	 * In this class, we use the algorithm StochasticLocalSearch that we have seen in class
+	 * to find a best plan
+	 * 
+	 * P and MAX_ITER are 2 parameters using for this algorithm
+	 * */
+	
+	
+	
 	private List<Vehicle> mVehicles;
 	private TaskSet mTasks;
 	
@@ -32,7 +41,8 @@ public class PickupDeliveryProblem {
 	
 	// Use to add a new task each time we win a task from the auction
 	public A  addNewTask(Task task){
-		return null;
+		this.mTasks.add(task);
+		return StochasticLocalSearch();
 	}
 	
 	
@@ -60,9 +70,10 @@ public class PickupDeliveryProblem {
 	public double getCost() { return this.mCost; }
 	
 	public List<Vehicle> getVehicle() {return this.mVehicles;}
+	
+	
 	// Give all the task to the biggest vehicle 
 	//(have to change CAPACITY one of the vehicle to  = (# of task * 3)
-	
 	public A SelectInitialSolution_1(){
 		
 		Vehicle vehicle = null;
@@ -98,6 +109,10 @@ public class PickupDeliveryProblem {
 	
 	// Give all tasks to all vehicles randomly
 	public A SelectInitialSolution_2(){
+		
+		if (mTasks.isEmpty())
+			throw new IllegalArgumentException("There is no task for delivering");
+			
 		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
 		HashMap<Vehicle, Integer> load = new HashMap<Vehicle, Integer>();
 		
@@ -127,7 +142,7 @@ public class PickupDeliveryProblem {
 	// Apply Stochastic Local Search Algorithm
 	public A StochasticLocalSearch(){
 		
-		A plan = SelectInitialSolution_1();
+		A plan = SelectInitialSolution_2();
 		int iter = MAX_ITER;
 		
 		for (int i = 0; i < iter ; i++){
