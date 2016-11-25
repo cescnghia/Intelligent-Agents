@@ -37,15 +37,6 @@ public class PickupDeliveryProblem {
 	private static final int MAX_ITER = 10000;
 	
 	
-	/*----------HAVE TO IMPLEMENT----------*/
-	
-	// Use to add a new task each time we win a task from the auction
-	public A  addNewTask(Task task){
-		this.mTasks.add(task);
-		return StochasticLocalSearch();
-	}
-	
-	
 	/**Constructor  
 	 * 
 	 * @param vehicles: all vehicles
@@ -72,6 +63,14 @@ public class PickupDeliveryProblem {
 	public List<Vehicle> getVehicle() {return this.mVehicles;}
 	
 	
+	// Use to add a new task each time we win a task from the auction
+	
+	public PickupDeliveryProblem addNewTask(Task task){
+		this.mTasks.add(task);
+		return new PickupDeliveryProblem(this.mVehicles, this.mTasks);
+	}
+	
+/*	
 	// Give all the task to the biggest vehicle 
 	//(have to change CAPACITY one of the vehicle to  = (# of task * 3)
 	public A SelectInitialSolution_1(){
@@ -106,9 +105,9 @@ public class PickupDeliveryProblem {
 		//return a "initial" plan
 		return new A(map);
 	}
-	
+*/	
 	// Give all tasks to all vehicles randomly
-	public A SelectInitialSolution_2(){
+	public A SelectInitialSolution(){
 		
 		if (mTasks.isEmpty())
 			throw new IllegalArgumentException("There is no task for delivering");
@@ -142,7 +141,7 @@ public class PickupDeliveryProblem {
 	// Apply Stochastic Local Search Algorithm
 	public A StochasticLocalSearch(){
 		
-		A plan = SelectInitialSolution_2();
+		A plan = SelectInitialSolution();
 		int iter = MAX_ITER;
 		
 		for (int i = 0; i < iter ; i++){
@@ -192,8 +191,6 @@ public class PickupDeliveryProblem {
 	//Choose 
 	private ArrayList<A> ChooseNeighbors(A old) {
 		ArrayList<A> plans = new ArrayList<A>();
-		
-		//check(old);
 
 		Random rd = new Random();
 		Vehicle vehicle = null;
