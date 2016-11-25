@@ -38,10 +38,15 @@ public class AuctionTemplate implements AuctionBehavior {
     private long timeout_plan;
 	
 	// Agent's parameters
-	private PickupDeliveryProblem myPDP;
-	
+	private PickupDeliveryProblem myBestPDP;
 	private double myBestCost = Double.MAX_VALUE;
 	private A myBestPlan = null;
+	
+	// Parameters intermedia
+	// Using to comptute new cost and new plan in askPrice() method
+	private PickupDeliveryProblem myNewPDP;
+	private double myNewCost = Double.MAX_VALUE;
+	private A myNewPlan = null;
 
 
 	@Override
@@ -74,7 +79,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 		ArrayList<Vehicle> myVehicles = new ArrayList<Vehicle>(agent.vehicles());
 		
-		this.myPDP = new PickupDeliveryProblem(myVehicles);
+		this.myBestPDP = new PickupDeliveryProblem(myVehicles);
 		
 		
 	}
@@ -88,8 +93,10 @@ public class AuctionTemplate implements AuctionBehavior {
 		if (winner == agent.id()) { // We win this task
 			// we win for the task
 			// store the value of newCost and newPlan that we have computed in the method askPrice()
+			this.myBestPDP = this.myNewPDP;
+			this.myBestPlan = this.myNewPlan;
+			this.myBestCost = this.myNewCost;
 			// continue the auction
-			
 			
 			//Code given by assistant
 			currentCity = previous.deliveryCity;
@@ -100,22 +107,22 @@ public class AuctionTemplate implements AuctionBehavior {
 		}
 	}
 	
-	// function 
+	
 	@Override
 	public Long askPrice(Task task) {
 
 		if (vehicle.capacity() < task.weight)
 			return null;
 		
-		/*------------TO DO------------*/
-		
 		// try to add this new task to the old plan
-		this.myPDP.addNewTask(task);
-		A newPlan = this.myPDP.StochasticLocalSearch();
+		this.myNewPDP = this.myBestPDP.addNewTask(task);
+		this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
 		// and compute new cost for this new plan
-		double newCost = newPlan.cost();
-		// compute and return a bid in terms of new cost
+		this.myNewCost = myNewPlan.cost();
 		
+		/*TO DO*/
+		// compute and return a bid in terms of new cost
+		// if myNewCost is bigger than myBestCost => no need to take new task
 		
 		
 		// Code given by ASSITANT
@@ -138,8 +145,8 @@ public class AuctionTemplate implements AuctionBehavior {
         long time_start = System.currentTimeMillis();
 
        // Plan is already created by the askPrice()
-        this.myBestPlan = this.myPDP.getBestA();
-        this.myBestCost = myBestPlan.cost();
+       // Best plan is myBestPlan
+       // Best cost is myBestCost
         
         System.out.println("The minimun cost is: "+myBestCost);
         
