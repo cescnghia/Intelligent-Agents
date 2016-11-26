@@ -64,10 +64,13 @@ public class PickupDeliveryProblem {
 	
 	
 	// Use to add a new task each time we win a task from the auction
-	
 	public PickupDeliveryProblem addNewTask(Task task){
 		this.mTasks.add(task);
 		return new PickupDeliveryProblem(this.mVehicles, this.mTasks);
+	}
+	
+	public PickupDeliveryProblem clone() {
+		return new PickupDeliveryProblem(this.mVehicles, this.mTasks.clone());
 	}
 	
 /*	
@@ -115,11 +118,10 @@ public class PickupDeliveryProblem {
 		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
 		HashMap<Vehicle, Integer> load = new HashMap<Vehicle, Integer>();
 		
-		for (Vehicle v : mVehicles)
-				map.put(v, new LinkedList<Task_>());
-		
-		for (Vehicle v : mVehicles)
+		for (Vehicle v : mVehicles) {
+			map.put(v, new LinkedList<Task_>());
 			load.put(v, 0);
+		}
 		
 		Random rd = new Random();
 		

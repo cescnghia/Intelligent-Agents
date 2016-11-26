@@ -115,7 +115,7 @@ public class AuctionTemplate implements AuctionBehavior {
 			return null;
 		
 		// try to add this new task to the old plan
-		this.myNewPDP = this.myBestPDP.addNewTask(task);
+		this.myNewPDP = this.myBestPDP.clone().addNewTask(task);
 		this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
 		// and compute new cost for this new plan
 		this.myNewCost = myNewPlan.cost();
