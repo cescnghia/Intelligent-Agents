@@ -1,6 +1,7 @@
 package template;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -61,16 +62,28 @@ public class PickupDeliveryProblem {
 	public double getCost() { return this.mCost; }
 	
 	public List<Vehicle> getVehicle() {return this.mVehicles;}
-	
+
+	static Task[] addElement(Task[] a, Task e) {
+	    a  = Arrays.copyOf(a, a.length + 1);
+	    a[a.length - 1] = e;
+	    return a;
+	}
 	
 	// Use to add a new task each time we win a task from the auction
 	public PickupDeliveryProblem addNewTask(Task task){
-		this.mTasks.add(task);
-		return new PickupDeliveryProblem(this.mVehicles, this.mTasks);
+		System.out.println("[PDP addNewTask] add New task : " + task + " to " + this.mTasks);
+		Task[] tasks = new Task[]{};
+		if(this.mTasks != null){
+			for(Task taskA: this.mTasks){
+				tasks = addElement(tasks, taskA);
+			}
+		}
+		tasks = addElement(tasks, task);
+		return new PickupDeliveryProblem(this.mVehicles, TaskSet.create(tasks));
 	}
 	
 	public PickupDeliveryProblem clone() {
-		return new PickupDeliveryProblem(this.mVehicles, this.mTasks.clone());
+		return new PickupDeliveryProblem(this.mVehicles, this.mTasks);
 	}
 	
 /*	

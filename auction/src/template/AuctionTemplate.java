@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import template.Task_.Action;
+import logist.LogistPlatform;
 import logist.LogistSettings;
 import logist.Measures;
 import logist.behavior.AuctionBehavior;
@@ -56,7 +57,7 @@ public class AuctionTemplate implements AuctionBehavior {
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config/settings_default.xml");
+            ls = Parsers.parseSettings("config/settings_auction.xml");
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
@@ -91,6 +92,7 @@ public class AuctionTemplate implements AuctionBehavior {
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		
 		if (winner == agent.id()) { // We win this task
+			System.out.println("[AuctionTemplate.auctionResult] we win the task: " + previous);
 			// we win for the task
 			// store the value of newCost and newPlan that we have computed in the method askPrice()
 			this.myBestPDP = this.myNewPDP;
@@ -102,6 +104,7 @@ public class AuctionTemplate implements AuctionBehavior {
 			currentCity = previous.deliveryCity;
 			
 		} else { // Do Something
+			System.out.println("[AuctionTemplate.auctionResult] we lose the task: " + previous);
 			// analyze the plan of opponent
 			// do some strategy....
 		}
@@ -115,10 +118,20 @@ public class AuctionTemplate implements AuctionBehavior {
 			return null;
 		
 		// try to add this new task to the old plan
+		System.out.println("[AuctionTemplate.askPrice] create myNewPDP");
 		this.myNewPDP = this.myBestPDP.clone().addNewTask(task);
+		
+		System.out.println("[AuctionTemplate.askPrice] calculate plan of myNewPDP");
 		this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
+		
 		// and compute new cost for this new plan
+		System.out.println("[AuctionTemplate.askPrice] calculate cost of myNewPDP");
 		this.myNewCost = myNewPlan.cost();
+		
+		System.out.println("[AuctionTemplate.askPrice] estimate the bid for myNewPDP");
+		BidEstimator bidEstimator = new BidEstimator(this.myBestPDP, this.myNewPDP);
+		
+		return bidEstimator.getBid();
 		
 		/*TO DO*/
 		// compute and return a bid in terms of new cost
@@ -126,16 +139,16 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 		
 		// Code given by ASSITANT
-		long distanceTask = task.pickupCity.distanceUnitsTo(task.deliveryCity);
-		long distanceSum = distanceTask
-				+ currentCity.distanceUnitsTo(task.pickupCity);
-		double marginalCost = Measures.unitsToKM(distanceSum
-				* vehicle.costPerKm());
-
-		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
-		double bid = ratio * marginalCost;
-
-		return (long) Math.round(bid);
+//		long distanceTask = task.pickupCity.distanceUnitsTo(task.deliveryCity);
+//		long distanceSum = distanceTask
+//				+ currentCity.distanceUnitsTo(task.pickupCity);
+//		double marginalCost = Measures.unitsToKM(distanceSum
+//				* vehicle.costPerKm());
+//
+//		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
+//		double bid = ratio * marginalCost;
+//
+//		return (long) Math.round(bid);
 	}
 	
 	
