@@ -27,7 +27,8 @@ public class PickupDeliveryProblem {
 	
 	
 	private List<Vehicle> mVehicles;
-	private TaskSet mTasks;
+	//private TaskSet mTasks;
+	private List<Task> mTasks ;
 	
 	// For storing best plan and the best cost
 	private A mBestA;
@@ -43,23 +44,22 @@ public class PickupDeliveryProblem {
 	 * @param vehicles: all vehicles
 	 * @param tasks: all tasks
 	 */
-	public PickupDeliveryProblem(List<Vehicle> vehicles, TaskSet tasks){
+	public PickupDeliveryProblem(List<Vehicle> vehicles, List<Task> tasks){
 		this.mVehicles = new ArrayList<Vehicle>(vehicles);
-		this.mTasks = tasks;
+		//this.mTasks = tasks;
 		this.mCost = Double.MAX_VALUE;
 		this.mBestA = null;
+		this.mTasks = new ArrayList<Task>(tasks);
 	}
 	
 	public PickupDeliveryProblem(List<Vehicle> vehicles){
 		this.mVehicles = new ArrayList<Vehicle>(vehicles);
-		this.mTasks = null;
+		this.mTasks = new ArrayList<Task>();
 		this.mCost = Double.MAX_VALUE;
 		this.mBestA = null;
 	}
 	
 	public A getBestA() { return this.mBestA; }
-	
-	public TaskSet getTasks() { return this.mTasks; }
 	
 	public double getCost() { return this.mCost; }
 	
@@ -74,15 +74,17 @@ public class PickupDeliveryProblem {
 	// Use to add a new task each time we win a task from the auction
 	public PickupDeliveryProblem addNewTask(Task task){
 		System.out.println("[PDP addNewTask] add New task : " + task + " to " + this.mTasks);
+		/*
 		Task[] tasks = new Task[]{};
 		if(this.mTasks != null){
 			for(Task taskA: this.mTasks){
 				tasks = addElement(tasks, taskA);
 			}
 		}
-		tasks = addElement(tasks, task);
-		System.out.println("[PDP addNewTask] New tasks number : " + tasks.length);
-		return new PickupDeliveryProblem(this.mVehicles, TaskSet.create(tasks));
+		*/
+		this.mTasks.add(task);
+		//tasks = addElement(tasks, task);
+		return new PickupDeliveryProblem(this.mVehicles, this.mTasks);
 	}
 	
 	public PickupDeliveryProblem clone() {
@@ -143,13 +145,8 @@ public class PickupDeliveryProblem {
 		
 		for (Task t : mTasks){
 			Vehicle v = mVehicles.get(rd.nextInt(mVehicles.size()));
-			int i = 0;
 			while (load.get(v) + t.weight > v.capacity()){
 				v = mVehicles.get(rd.nextInt(mVehicles.size()));
-				if(i>10) {
-					throw new IllegalArgumentException("no vehicle can carry this task.");
-				}
-				i++;
 			}
 			load.put(v, load.get(v)+t.weight);
 			LinkedList<Task_> actualyList = map.get(v);
