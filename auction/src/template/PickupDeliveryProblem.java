@@ -66,12 +66,6 @@ public class PickupDeliveryProblem {
 	public double getCost() { return this.mCost; }
 	
 	public List<Vehicle> getVehicle() {return this.mVehicles;}
-
-	static Task[] addElement(Task[] a, Task e) {
-	    a  = Arrays.copyOf(a, a.length + 1);
-	    a[a.length - 1] = e;
-	    return a;
-	}
 	
 	// Use to add a new task each time we win a task from the auction
 	public PickupDeliveryProblem addNewTask(Task task){
@@ -154,7 +148,6 @@ public class PickupDeliveryProblem {
  				if(i>10) {
  					throw new IllegalArgumentException("no vehicle can carry this task.");
  				}
- 				
  				i++;
   			}
 			

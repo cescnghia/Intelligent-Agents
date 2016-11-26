@@ -1,5 +1,7 @@
 package template;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class BidEstimator {
 
 	// Agent's parameters
@@ -25,7 +27,8 @@ public class BidEstimator {
 	 */
 	public long getBid() {
 		long lowBound = this.getLowBound();
-		return lowBound;
+		long v = ThreadLocalRandom.current().nextLong(100);
+		return lowBound + v;
 	}
 	
 	/**

@@ -98,6 +98,8 @@ public class AuctionTemplate implements AuctionBehavior {
 			this.myBestPDP = this.myNewPDP;
 			this.myBestPlan = this.myNewPlan;
 			this.myBestCost = this.myNewCost;
+			
+			System.out.println("[AuctionTemplate.auctionResult] the new plan vehicles: " + this.myNewPlan.getVehicles());
 			// continue the auction
 			
 			//Code given by assistant
@@ -122,11 +124,13 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 		try{
 				this.myNewPDP = this.myBestPDP.clone().addNewTask(task);			
-			  	System.out.println("[AuctionTemplate.askPrice] task number of myNewPDP" + this.myNewPDP.getTasks().size());
+			  	System.out.println("[AuctionTemplate.askPrice] task number of myNewPDP");
 			 			
 			 	System.out.println("[AuctionTemplate.askPrice] calculate plan of myNewPDP");
 			 	this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
 			 			
+			 	System.out.println("[AuctionTemplate.askPrice] myNewPlan.vehicles : "+ myNewPlan.getVehicles());
+			 	System.out.println("[AuctionTemplate.askPrice] myNewPlan.cost : "+ myNewPlan.cost());
 			 			// and compute new cost for this new plan
 				System.out.println("[AuctionTemplate.askPrice] calculate cost of myNewPDP");
 	 			this.myNewCost = myNewPlan.cost();
@@ -174,6 +178,8 @@ public class AuctionTemplate implements AuctionBehavior {
         List<Vehicle> myVehicles = myBestPlan.getVehicles();
         
         List<Plan> plans = new ArrayList<Plan>();
+        
+        System.out.println("myVehicles number : " + myVehicles.size());
 
         for (Vehicle v : myVehicles){
         	LinkedList<Task_> tasks_ = myBestPlan.getTasksOfVehicle(v);
