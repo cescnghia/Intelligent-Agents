@@ -36,6 +36,7 @@ public class A {
 	}
 	
 	public A(A that){
+		this.mVehicles = that.mVehicles;
 		this.mVehicleTasks = new HashMap<Vehicle, LinkedList<Task_>>(that.mVehicleTasks);
 	}
 	

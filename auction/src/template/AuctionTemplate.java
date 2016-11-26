@@ -80,6 +80,8 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 		ArrayList<Vehicle> myVehicles = new ArrayList<Vehicle>(agent.vehicles());
 		
+		System.out.println("[setup] myVehicles: " + myVehicles);
+		
 		this.myBestPDP = new PickupDeliveryProblem(myVehicles);
 		
 		
@@ -128,9 +130,6 @@ public class AuctionTemplate implements AuctionBehavior {
 			 			
 			 	System.out.println("[AuctionTemplate.askPrice] calculate plan of myNewPDP");
 			 	this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
-			 			
-			 	System.out.println("[AuctionTemplate.askPrice] myNewPlan.vehicles : "+ myNewPlan.getVehicles());
-			 	System.out.println("[AuctionTemplate.askPrice] myNewPlan.cost : "+ myNewPlan.cost());
 			 			// and compute new cost for this new plan
 				System.out.println("[AuctionTemplate.askPrice] calculate cost of myNewPDP");
 	 			this.myNewCost = myNewPlan.cost();

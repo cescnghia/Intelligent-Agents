@@ -84,6 +84,7 @@ public class PickupDeliveryProblem {
 	}
 	
 	public PickupDeliveryProblem clone() {
+		System.out.println("[clone]: " + this.mVehicles);
 		return new PickupDeliveryProblem(this.mVehicles, this.mTasks);
 	}
 	
@@ -224,15 +225,15 @@ public class PickupDeliveryProblem {
 			if ( (tasks != null) && (!tasks.isEmpty()))
 				break;
 		}
-	
 		
 		//Applying the changing vehicle operator
 		for (Vehicle v : this.mVehicles){
 			//check if vehicle "v" can take the task of vehicle "vehicle" (weight compatible)
 			if ( (v != vehicle) && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight <= v.capacity())){
 				A newA = ChangingVehicle(old, vehicle, v);
-				if ( (newA != null) && checkConstraint(newA))
+				if ( (newA != null) && checkConstraint(newA)){
 					plans.add(newA);
+				}
 			}
 		}
 		
@@ -254,7 +255,6 @@ public class PickupDeliveryProblem {
 	// Move the 1st task of v1 and append to the head of v2
 	private A ChangingVehicle(A a, Vehicle v1, Vehicle v2){
 		A newA = new A(a);
-
 		// There is no task on v1
 		if (newA.getTasksOfVehicle(v1)==null || newA.getTasksOfVehicle(v1).isEmpty())
 			return newA;
@@ -263,7 +263,7 @@ public class PickupDeliveryProblem {
 
 		if (! newA.getTasksOfVehicle(v1).contains(taskToMove.getInverse()))
 			throw new IllegalArgumentException("2 actions of a task is not in the same vehicle");
-
+		
 		// Have to remove 2 actions (pickup and delivery) of the task "taskToMove" in v1...
 		newA.removeTaskFromVehicle(taskToMove, v1);
 		newA.removeTaskFromVehicle(taskToMove.getInverse(), v1);
