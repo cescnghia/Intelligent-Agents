@@ -59,6 +59,8 @@ public class PickupDeliveryProblem {
 	
 	public A getBestA() { return this.mBestA; }
 	
+	public TaskSet getTasks() { return this.mTasks; }
+	
 	public double getCost() { return this.mCost; }
 	
 	public List<Vehicle> getVehicle() {return this.mVehicles;}
@@ -79,6 +81,7 @@ public class PickupDeliveryProblem {
 			}
 		}
 		tasks = addElement(tasks, task);
+		System.out.println("[PDP addNewTask] New tasks number : " + tasks.length);
 		return new PickupDeliveryProblem(this.mVehicles, TaskSet.create(tasks));
 	}
 	
@@ -140,8 +143,13 @@ public class PickupDeliveryProblem {
 		
 		for (Task t : mTasks){
 			Vehicle v = mVehicles.get(rd.nextInt(mVehicles.size()));
+			int i = 0;
 			while (load.get(v) + t.weight > v.capacity()){
 				v = mVehicles.get(rd.nextInt(mVehicles.size()));
+				if(i>10) {
+					throw new IllegalArgumentException("no vehicle can carry this task.");
+				}
+				i++;
 			}
 			load.put(v, load.get(v)+t.weight);
 			LinkedList<Task_> actualyList = map.get(v);
