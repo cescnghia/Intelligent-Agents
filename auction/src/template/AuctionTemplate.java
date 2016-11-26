@@ -119,19 +119,27 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 		// try to add this new task to the old plan
 		System.out.println("[AuctionTemplate.askPrice] create myNewPDP");
-		this.myNewPDP = this.myBestPDP.clone().addNewTask(task);
 		
-		System.out.println("[AuctionTemplate.askPrice] calculate plan of myNewPDP");
-		this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
-		
-		// and compute new cost for this new plan
-		System.out.println("[AuctionTemplate.askPrice] calculate cost of myNewPDP");
-		this.myNewCost = myNewPlan.cost();
-		
-		System.out.println("[AuctionTemplate.askPrice] estimate the bid for myNewPDP");
-		BidEstimator bidEstimator = new BidEstimator(this.myBestPDP, this.myNewPDP);
-		
-		return bidEstimator.getBid();
+		try{
+				this.myNewPDP = this.myBestPDP.clone().addNewTask(task);			
+			  	System.out.println("[AuctionTemplate.askPrice] task number of myNewPDP" + this.myNewPDP.getTasks().size());
+			 			
+			 	System.out.println("[AuctionTemplate.askPrice] calculate plan of myNewPDP");
+			 	this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
+			 			
+			 			// and compute new cost for this new plan
+				System.out.println("[AuctionTemplate.askPrice] calculate cost of myNewPDP");
+	 			this.myNewCost = myNewPlan.cost();
+			 			
+	 			System.out.println("[AuctionTemplate.askPrice] estimate the bid for myNewPDP");
+				BidEstimator bidEstimator = new BidEstimator(this.myBestPDP, this.myNewPDP);
+			 			
+	 			return bidEstimator.getBid();
+	 		} catch (Exception e) {
+	 			System.out.println(e);
+			 	return Long.MAX_VALUE;
+			}
+
 		
 		/*TO DO*/
 		// compute and return a bid in terms of new cost

@@ -61,6 +61,8 @@ public class PickupDeliveryProblem {
 	
 	public A getBestA() { return this.mBestA; }
 	
+	public List<Task> getTasks() { return this.mTasks; }
+	
 	public double getCost() { return this.mCost; }
 	
 	public List<Vehicle> getVehicle() {return this.mVehicles;}
@@ -145,9 +147,17 @@ public class PickupDeliveryProblem {
 		
 		for (Task t : mTasks){
 			Vehicle v = mVehicles.get(rd.nextInt(mVehicles.size()));
+			int i = 0;
+  			
 			while (load.get(v) + t.weight > v.capacity()){
-				v = mVehicles.get(rd.nextInt(mVehicles.size()));
-			}
+  				v = mVehicles.get(rd.nextInt(mVehicles.size()));
+ 				if(i>10) {
+ 					throw new IllegalArgumentException("no vehicle can carry this task.");
+ 				}
+ 				
+ 				i++;
+  			}
+			
 			load.put(v, load.get(v)+t.weight);
 			LinkedList<Task_> actualyList = map.get(v);
 			actualyList.add(new Task_(t, Action.DELIVERY));
