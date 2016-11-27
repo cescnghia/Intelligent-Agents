@@ -34,7 +34,6 @@ public class AuctionTemplate implements AuctionBehavior {
 	private Agent agent;
 	private Random random;
 	private Vehicle vehicle;
-	private City currentCity;
     private long timeout_setup;
     private long timeout_plan;
 	
@@ -73,10 +72,10 @@ public class AuctionTemplate implements AuctionBehavior {
 		this.distribution = distribution;
 		this.agent = agent;
 		this.vehicle = agent.vehicles().get(0);
-		this.currentCity = vehicle.homeCity();
+//		this.currentCity = vehicle.homeCity();
 
-		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
-		this.random = new Random(seed);
+//		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
+//		this.random = new Random(seed);
 		
 		ArrayList<Vehicle> myVehicles = new ArrayList<Vehicle>(agent.vehicles());
 		
@@ -97,15 +96,16 @@ public class AuctionTemplate implements AuctionBehavior {
 			System.out.println("[AuctionTemplate.auctionResult] we win the task: " + previous);
 			// we win for the task
 			// store the value of newCost and newPlan that we have computed in the method askPrice()
+			this.myNewPDP.updateTask(previous);
 			this.myBestPDP = this.myNewPDP;
+			this.myNewPlan.updateTask(previous);
 			this.myBestPlan = this.myNewPlan;
-			this.myBestCost = this.myNewCost;
-			
-			System.out.println("[AuctionTemplate.auctionResult] the new plan vehicles: " + this.myNewPlan.getVehicles());
+			this.myBestCost = this.myBestPlan.cost();
+		
 			// continue the auction
 			
 			//Code given by assistant
-			currentCity = previous.deliveryCity;
+//			currentCity = previous.deliveryCity;
 			
 		} else { // Do Something
 			System.out.println("[AuctionTemplate.auctionResult] we lose the task: " + previous);
@@ -125,24 +125,16 @@ public class AuctionTemplate implements AuctionBehavior {
 		System.out.println("[AuctionTemplate.askPrice] create myNewPDP");
 		
 		try{
-				this.myNewPDP = this.myBestPDP.clone().addNewTask(task);			
-			  	System.out.println("[AuctionTemplate.askPrice] task number of myNewPDP");
-			 			
-			 	System.out.println("[AuctionTemplate.askPrice] calculate plan of myNewPDP");
-			 	this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
-			 			// and compute new cost for this new plan
-				System.out.println("[AuctionTemplate.askPrice] calculate cost of myNewPDP");
-	 			this.myNewCost = myNewPlan.cost();
-			 			
-	 			System.out.println("[AuctionTemplate.askPrice] estimate the bid for myNewPDP");
-				BidEstimator bidEstimator = new BidEstimator(this.myBestPDP, this.myNewPDP);
-			 			
-	 			return bidEstimator.getBid();
-	 		} catch (Exception e) {
-	 			System.out.println(e);
-			 	return Long.MAX_VALUE;
-			}
-
+			this.myNewPDP = this.myBestPDP.clone().addNewTask(task);
+			this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
+			BidEstimator bidEstimator = new BidEstimator(this.myBestPlan, this.myNewPlan);
+ 			return bidEstimator.getBid();
+ 		} catch (Exception e) {
+ 			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+ 			System.out.println(e);
+ 			return null;
+		}
+		
 		
 		/*TO DO*/
 		// compute and return a bid in terms of new cost
@@ -166,38 +158,37 @@ public class AuctionTemplate implements AuctionBehavior {
 	
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+    	System.out.println("Generate Plan");
         long time_start = System.currentTimeMillis();
 
        // Plan is already created by the askPrice()
        // Best plan is myBestPlan
        // Best cost is myBestCost
         
-        System.out.println("The minimun cost is: "+myBestCost);
-        
-        List<Vehicle> myVehicles = myBestPlan.getVehicles();
-        
         List<Plan> plans = new ArrayList<Plan>();
         
-        System.out.println("myVehicles number : " + myVehicles.size());
+        List<City> cities = new ArrayList<City>();
 
-        for (Vehicle v : myVehicles){
+        for (Vehicle v : vehicles){
+        	City homeCity = v.homeCity();
         	LinkedList<Task_> tasks_ = myBestPlan.getTasksOfVehicle(v);
         	if (tasks_ != null) {
-        		Plan plan = makePlan(v, tasks_);
+        		Plan plan = makePlan(homeCity, tasks_);
        			plans.add(plan);
+        	} else {
+        		System.out.println("!!!!!!!!! task is null");
         	}
         }
         
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
         System.out.println("The plan was generated in "+duration+" milliseconds.");
-        
         return plans;
     }
     
-    private Plan makePlan(Vehicle v, LinkedList<Task_> tasks) {
-		City currentCity = v.homeCity();
-		Plan plan = new Plan(currentCity);
+    private Plan makePlan(City homeCity, LinkedList<Task_> tasks) {
+		City currentCity = homeCity;
+		Plan plan = new Plan(homeCity);
 		
 		for(Task_ t : tasks){
 			if (t.getAction() == Action.PICKUP){
@@ -214,6 +205,7 @@ public class AuctionTemplate implements AuctionBehavior {
 				plan.appendDelivery(t.getTask());
 			}
 		}
+		
 		return plan;
 	}
 }

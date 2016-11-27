@@ -5,19 +5,15 @@ import java.util.concurrent.ThreadLocalRandom;
 public class BidEstimator {
 
 	// Agent's parameters
-	private PickupDeliveryProblem mBestPDP;
-	private double mBestCost = Double.MAX_VALUE;
 	private A mBestPlan = null;
 	
 	// Parameters intermedia
 	// Using to comptute new cost and new plan in askPrice() method
-	private PickupDeliveryProblem mNewPDP;
-	private double mNewCost = Double.MAX_VALUE;
 	private A mNewPlan = null;
 	
-	public BidEstimator(PickupDeliveryProblem bestPDP, PickupDeliveryProblem newPDP) {
-		this.mBestPDP = bestPDP.clone();
-		this.mNewPDP = newPDP.clone();
+	public BidEstimator(A bestPlan, A newPlan) {
+		this.mBestPlan = bestPlan;
+		this.mNewPlan = newPlan;
 	}
 	
 	/**
@@ -38,7 +34,9 @@ public class BidEstimator {
 	 * @return the lower bound for the bid
 	 */
 	private long getLowBound() {
-		return (long) (this.mNewPDP.getCost() - this.mBestPDP.getCost());
+		if(this.mBestPlan == null)
+			return (long) this.mNewPlan.cost();
+		return (long) (this.mNewPlan.cost() - this.mBestPlan.cost());
 	}
 	
 }

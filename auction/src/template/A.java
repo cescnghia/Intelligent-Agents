@@ -7,6 +7,7 @@ import java.util.List;
 
 import template.Task_.Action;
 import logist.simulation.Vehicle;
+import logist.task.Task;
  /**
   * 
   *  @author Anh Nghia Khau and Stephane Cayssials
@@ -56,6 +57,21 @@ public class A {
 	
 	
 	/*------ALL TRANSFORMATIONS METHODS------*/
+	
+	public void updateTask(Task task){
+		for(Vehicle v: this.mVehicles){
+			System.out.println(v);
+			LinkedList<Task_> tasks_ = this.mVehicleTasks.get(v);
+			for (int i = 0 ; i < tasks_.size(); i++){
+				if(tasks_.get(i).getTask().id == task.id){
+					tasks_.set(i, new Task_(task, tasks_.get(i).getAction()));
+//					this.mVehicleTasks.remove(v);
+					this.mVehicleTasks.put(v, tasks_);
+				}
+			}
+			mVehicleTasks.size();
+		}
+	}
 	
 	// Add a task to the head
 	public void addTaskForVehicle(Task_ a, Vehicle v){

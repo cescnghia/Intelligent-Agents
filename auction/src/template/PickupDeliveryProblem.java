@@ -36,7 +36,7 @@ public class PickupDeliveryProblem {
 	
 	// Parameters for the algorithm
 	private static final double P = 0.4;
-	private static final int MAX_ITER = 10000;
+	private static final int MAX_ITER = 1000;
 	
 	
 	/**Constructor  
@@ -70,16 +70,7 @@ public class PickupDeliveryProblem {
 	// Use to add a new task each time we win a task from the auction
 	public PickupDeliveryProblem addNewTask(Task task){
 		System.out.println("[PDP addNewTask] add New task : " + task + " to " + this.mTasks);
-		/*
-		Task[] tasks = new Task[]{};
-		if(this.mTasks != null){
-			for(Task taskA: this.mTasks){
-				tasks = addElement(tasks, taskA);
-			}
-		}
-		*/
 		this.mTasks.add(task);
-		//tasks = addElement(tasks, task);
 		return new PickupDeliveryProblem(this.mVehicles, this.mTasks);
 	}
 	
@@ -124,6 +115,15 @@ public class PickupDeliveryProblem {
 		return new A(map);
 	}
 */	
+	
+	public void updateTask(Task task) {
+		for (int i = 0 ; i < this.mTasks.size(); i++){
+			if(this.mTasks.get(i).id == task.id){
+				this.mTasks.set(i, task);
+			}
+		}
+	}
+	
 	// Give all tasks to all vehicles randomly
 	public A SelectInitialSolution(){
 		
