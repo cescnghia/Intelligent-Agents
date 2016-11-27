@@ -40,6 +40,7 @@ public class AuctionTemplate implements AuctionBehavior {
     private long timeout_plan;
     
     private double myRatio = 0.85;
+    private double opponentRatio = 0;
 
 	private double maxRatio = 2;
 	private double minRatio = 0.5;
@@ -92,6 +93,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		this.distribution = distribution;
 		this.agent = agent;
 		this.vehicle = agent.vehicles().get(0);
+
 //		this.currentCity = vehicle.homeCity();
 
 //		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
@@ -125,8 +127,12 @@ public class AuctionTemplate implements AuctionBehavior {
 		    this.myBestPlan = this.myNewPlan;
 		    this.myBestCost = this.myNewCost;
 		    
+		    
 		    // we win, we try to increase the ratio for having more profit in next auction
-		    myRatio += (double)myBid / (double)opponentBid;
+		    // idea is we add a very small number to myRatio
+		    myRatio += myRatio*((double)myBid / (double)opponentBid);
+		    // opponent lose, he has to decrease his bid
+		    opponentRatio -=  opponentRatio*((double)myBid / (double)opponentBid);
 
 			
 		} else { // Do Something
@@ -137,13 +143,34 @@ public class AuctionTemplate implements AuctionBehavior {
 		    this.opponentBestPlan = this.opponentNewPlan;
 		    this.opponentBestCost = this.opponentNewCost;
 		    
-		    myRatio -= (double)myBid / (double)opponentBid;
+		    myRatio -= myRatio*((double)opponentBid / (double)myBid);
+		    opponentRatio += opponentRatio*((double)opponentBid / (double)myBid);
 
 		}	
 		
 		// minRatio <= ratio <= maxRatio
 		myRatio = Math.min(myRatio,maxRatio);
 		myRatio = Math.max(myRatio, minRatio);
+		opponentRatio = Math.min(opponentRatio,maxRatio);
+		opponentRatio = Math.max(opponentRatio, minRatio);
+		
+		// try to guess home city of the vehicle that opponent use for compute his first bid
+		City opponentBeginCity = null;
+		//we looking for the closest value to opponentBid
+		int costperkm = agent.vehicles().get(0).costPerKm();
+		double closest = Double.MAX_VALUE;
+		if (round == 1) { 
+			double bid_prime = 0;
+			for (City c : topology.cities()){
+				bid_prime = (c.distanceTo(previous.pickupCity) + previous.pathLength())*costperkm;
+				if (closest > Math.max(bid_prime, opponentBid)-Math.min(bid_prime, opponentBid)){
+					opponentBeginCity = c;
+					closest = Math.max(bid_prime, opponentBid)-Math.min(bid_prime, opponentBid);
+				}		
+			}
+			// Suppose that the opponent compute/update his bid = marginalCost*ratio
+			this.opponentRatio = opponentBid / (opponentBeginCity.distanceTo(previous.pickupCity) + previous.pathLength())*costperkm;
+		}
 
 	}
 	
@@ -172,14 +199,19 @@ public class AuctionTemplate implements AuctionBehavior {
 			double opponentNewMaginalCost = (opponentBestPlan == null) ? this.opponentNewCost : this.opponentNewCost - opponentBestPlan.cost();
 			
 			//Have to update myRatio and opponentRatio in auctionResult
-			
 			double myBid = myNewMaginalCost * myRatio;
-			double opponentBid = myBid / myRatio;
+			double opponentBid = opponentNewMaginalCost * opponentRatio;
 			
-			// if (myBid < 0) => good
+			if (myBid < 0) // We want our bid is a positive number
+				myBid = 1;
 			
+			if (round == 1) // we still not guess opponentRatio
+				opponentBid = myBid;	
+			
+			
+			// just give a bid smaller than the bid of the opponent
 			if (opponentBid < myBid)
-				myBid = opponentBid;
+				myBid = opponentBid - 1;
 			
 			return  (long) Math.round(myBid);
 
