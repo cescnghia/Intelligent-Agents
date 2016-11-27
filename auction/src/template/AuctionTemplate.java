@@ -168,8 +168,8 @@ public class AuctionTemplate implements AuctionBehavior {
 			this.opponentNewPlan = this.opponentNewPDP.StochasticLocalSearch();
 			this.opponentNewCost = this.opponentNewPlan.cost();
 			
-			double myNewMaginalCost = (round == 1) ? this.myNewCost :this.myNewCost - myBestPlan.cost();
-			double opponentNewMaginalCost = (round == 1) ? this.opponentNewCost : this.opponentNewCost - opponentBestPlan.cost();
+			double myNewMaginalCost = (myBestPlan == null) ? this.myNewCost :this.myNewCost - myBestPlan.cost();
+			double opponentNewMaginalCost = (opponentBestPlan == null) ? this.opponentNewCost : this.opponentNewCost - opponentBestPlan.cost();
 			
 			//Have to update myRatio and opponentRatio in auctionResult
 			
@@ -191,6 +191,8 @@ public class AuctionTemplate implements AuctionBehavior {
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
     	System.out.println("Generate Plan");
         long time_start = System.currentTimeMillis();
+        
+        System.out.println("Number of tasks that we won: "+ tasks.size());
 
         // Have to re-compute the best plan
         List<Task> t = new ArrayList<Task>(tasks);
