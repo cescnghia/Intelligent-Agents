@@ -2,8 +2,10 @@ package template;
 
 //the list of imports
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import template.Task_.Action;
@@ -47,12 +49,13 @@ public class AuctionTemplate implements AuctionBehavior {
 	private PickupDeliveryProblem myNewPDP;
 	private double myNewCost = Double.MAX_VALUE;
 	private A myNewPlan = null;
+	
+	private Map<Integer, Ennemy> mEnnemies = new HashMap<Integer, Ennemy>();
 
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
 			Agent agent) {
-		
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
@@ -92,6 +95,36 @@ public class AuctionTemplate implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		
+		//winner id
+		int winnerId = winner;
+		
+		// create ennemies for the first time
+		if(this.mEnnemies.isEmpty()){
+			int ennemiesNb = bids.length;
+			for(int i=0; i<ennemiesNb; i++){
+				if(i != this.agent.id()){
+					this.mEnnemies.put(i, new Ennemy(i));
+				}
+			}
+		}
+		
+		// add bids to the ennemies
+		int i = 0;
+		for(Long bid: bids) {
+			if(this.mEnnemies.get(i) != null) 
+				this.mEnnemies.get(i).addBid(bid, previous);
+			i++;
+		}
+		
+		
+		System.out.println("++++++++++++++BIDS++++++++++++++++"+this.agent.id());
+		
+		for (Long bid: bids)
+			System.out.println(bid);
+		
+		
+		
+		
 		if (winner == agent.id()) { // We win this task
 			System.out.println("[AuctionTemplate.auctionResult] we win the task: " + previous);
 			// we win for the task
@@ -130,8 +163,8 @@ public class AuctionTemplate implements AuctionBehavior {
 			BidEstimator bidEstimator = new BidEstimator(this.myBestPlan, this.myNewPlan);
  			return bidEstimator.getBid();
  		} catch (Exception e) {
- 			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
- 			System.out.println(e);
+ 			this.myNewPDP = this.myBestPDP.clone();
+ 			this.myNewPlan = this.myBestPlan;
  			return null;
 		}
 		

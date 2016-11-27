@@ -3,6 +3,8 @@ package template;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class BidEstimator {
+	
+	private int auctionNumber = 0;
 
 	// Agent's parameters
 	private A mBestPlan = null;
@@ -22,9 +24,13 @@ public class BidEstimator {
 	 * @return the bid
 	 */
 	public long getBid() {
-		long lowBound = this.getLowBound();
-		long v = ThreadLocalRandom.current().nextLong(100);
-		return lowBound + v;
+		if(this.auctionNumber == 0) {
+			long lowBound = this.getLowBound();
+			return lowBound;
+		} else {
+			long lowBound = this.getLowBound();
+			return lowBound;
+		}
 	}
 	
 	/**
@@ -37,6 +43,14 @@ public class BidEstimator {
 		if(this.mBestPlan == null)
 			return (long) this.mNewPlan.cost();
 		return (long) (this.mNewPlan.cost() - this.mBestPlan.cost());
+	}
+	
+	public void auctionWin() {
+		auctionNumber++;
+	}
+	
+	public void auctionLose() {
+		auctionNumber++;
 	}
 	
 }
