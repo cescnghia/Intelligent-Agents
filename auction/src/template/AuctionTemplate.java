@@ -38,17 +38,29 @@ public class AuctionTemplate implements AuctionBehavior {
 	private Vehicle vehicle;
     private long timeout_setup;
     private long timeout_plan;
+    
+    private double myRatio = 0.85;
+    private double opponentRatio = 0.85;
+    private int round = 0;
 	
 	// Agent's parameters
 	private PickupDeliveryProblem myBestPDP;
 	private double myBestCost = Double.MAX_VALUE;
 	private A myBestPlan = null;
 	
+	private PickupDeliveryProblem opponentBestPDP;
+	private double opponentBestCost = Double.MAX_VALUE;
+	private A opponentBestPlan = null;
+	
 	// Parameters intermedia
 	// Using to comptute new cost and new plan in askPrice() method
 	private PickupDeliveryProblem myNewPDP;
 	private double myNewCost = Double.MAX_VALUE;
 	private A myNewPlan = null;
+	
+	private PickupDeliveryProblem opponentNewPDP;
+	private double opponentNewCost = Double.MAX_VALUE;
+	private A opponentNewPlan = null;
 	
 	private Map<Integer, Ennemy> mEnnemies = new HashMap<Integer, Ennemy>();
 
@@ -151,22 +163,37 @@ public class AuctionTemplate implements AuctionBehavior {
 	@Override
 	public Long askPrice(Task task) {
 
+		round++ ;
+		
 		if (vehicle.capacity() < task.weight)
 			return null;
 		
 		// try to add this new task to the old plan
 		System.out.println("[AuctionTemplate.askPrice] create myNewPDP");
 		
-		try{
+		
 			this.myNewPDP = this.myBestPDP.clone().addNewTask(task);
 			this.myNewPlan = this.myNewPDP.StochasticLocalSearch();
-			BidEstimator bidEstimator = new BidEstimator(this.myBestPlan, this.myNewPlan);
- 			return bidEstimator.getBid();
- 		} catch (Exception e) {
- 			this.myNewPDP = this.myBestPDP.clone();
- 			this.myNewPlan = this.myBestPlan;
- 			return null;
-		}
+			this.myNewCost = this.myNewPlan.cost();
+			
+			this.opponentNewPDP = this.opponentBestPDP.clone().addNewTask(task);
+			this.opponentNewPlan = this.opponentNewPDP.StochasticLocalSearch();
+			this.opponentNewCost = this.opponentNewPlan.cost();
+			
+			double myNewMaginalCost = this.myNewCost - myBestPlan.cost();
+			double opponentNewMaginalCost = this.opponentNewCost - opponentBestPlan.cost();
+			
+			//Have to update myRatio and opponentRatio in auctionResult
+			
+			double myBid = myNewMaginalCost * myRatio;
+			double opponentBid = opponentNewMaginalCost * opponentRatio;
+			
+			// if (myBid < 0) => good
+			
+			if (opponentBid < myBid)
+				myBid = opponentBid;
+			
+			return  (long) Math.round(myBid);
 		
 		
 		/*TO DO*/
