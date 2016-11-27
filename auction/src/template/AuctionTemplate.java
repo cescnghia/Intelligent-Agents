@@ -40,8 +40,13 @@ public class AuctionTemplate implements AuctionBehavior {
     private long timeout_plan;
     
     private double myRatio = 0.85;
-    private double opponentRatio = 0.85;
+
+	private double maxRatio = 2;
+	private double minRatio = 0.5;
     private int round = 0;
+    
+    private List<Long> myBids = new ArrayList<Long>();
+    private List<Long> opponentBids = new ArrayList<Long>();
 	
 	// Agent's parameters
 	private PickupDeliveryProblem myBestPDP;
@@ -97,6 +102,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		System.out.println("[setup] myVehicles: " + myVehicles);
 		
 		this.myBestPDP = new PickupDeliveryProblem(myVehicles);
+		this.opponentBestPDP = new PickupDeliveryProblem(myVehicles);
 		
 		
 	}
@@ -107,56 +113,38 @@ public class AuctionTemplate implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		
-		//winner id
-		int winnerId = winner;
-		
-		// create ennemies for the first time
-		if(this.mEnnemies.isEmpty()){
-			int ennemiesNb = bids.length;
-			for(int i=0; i<ennemiesNb; i++){
-				if(i != this.agent.id()){
-					this.mEnnemies.put(i, new Ennemy(i));
-				}
-			}
-		}
-		
-		// add bids to the ennemies
-		int i = 0;
-		for(Long bid: bids) {
-			if(this.mEnnemies.get(i) != null) 
-				this.mEnnemies.get(i).addBid(bid, previous);
-			i++;
-		}
-		
-		
-		System.out.println("++++++++++++++BIDS++++++++++++++++"+this.agent.id());
-		
-		for (Long bid: bids)
-			System.out.println(bid);
-		
-		
-		
-		
+		System.out.println("Number of agent is: "+bids.length);
+		long myBid = bids[agent.id()];
+		long opponentBid = bids[1-agent.id()];
+	
 		if (winner == agent.id()) { // We win this task
 			System.out.println("[AuctionTemplate.auctionResult] we win the task: " + previous);
 			// we win for the task
 			// store the value of newCost and newPlan that we have computed in the method askPrice()
-			this.myNewPDP.updateTask(previous);
 			this.myBestPDP = this.myNewPDP;
-			this.myNewPlan.updateTask(previous);
-			this.myBestPlan = this.myNewPlan;
-			this.myBestCost = this.myBestPlan.cost();
-		
-			// continue the auction
-			
-			//Code given by assistant
-//			currentCity = previous.deliveryCity;
+		    this.myBestPlan = this.myNewPlan;
+		    this.myBestCost = this.myNewCost;
+		    
+		    // we win, we try to increase the ratio for having more profit in next auction
+		    myRatio += (double)myBid / (double)opponentBid;
+
 			
 		} else { // Do Something
 			System.out.println("[AuctionTemplate.auctionResult] we lose the task: " + previous);
 			// analyze the plan of opponent
 			// do some strategy....
-		}
+			this.opponentBestPDP = this.opponentNewPDP;
+		    this.opponentBestPlan = this.opponentNewPlan;
+		    this.opponentBestCost = this.opponentNewCost;
+		    
+		    myRatio -= (double)myBid / (double)opponentBid;
+
+		}	
+		
+		// minRatio <= ratio <= maxRatio
+		myRatio = Math.min(myRatio,maxRatio);
+		myRatio = Math.max(myRatio, minRatio);
+
 	}
 	
 	
@@ -180,13 +168,13 @@ public class AuctionTemplate implements AuctionBehavior {
 			this.opponentNewPlan = this.opponentNewPDP.StochasticLocalSearch();
 			this.opponentNewCost = this.opponentNewPlan.cost();
 			
-			double myNewMaginalCost = this.myNewCost - myBestPlan.cost();
-			double opponentNewMaginalCost = this.opponentNewCost - opponentBestPlan.cost();
+			double myNewMaginalCost = (round == 1) ? this.myNewCost :this.myNewCost - myBestPlan.cost();
+			double opponentNewMaginalCost = (round == 1) ? this.opponentNewCost : this.opponentNewCost - opponentBestPlan.cost();
 			
 			//Have to update myRatio and opponentRatio in auctionResult
 			
 			double myBid = myNewMaginalCost * myRatio;
-			double opponentBid = opponentNewMaginalCost * opponentRatio;
+			double opponentBid = myBid / myRatio;
 			
 			// if (myBid < 0) => good
 			
@@ -194,24 +182,7 @@ public class AuctionTemplate implements AuctionBehavior {
 				myBid = opponentBid;
 			
 			return  (long) Math.round(myBid);
-		
-		
-		/*TO DO*/
-		// compute and return a bid in terms of new cost
-		// if myNewCost is bigger than myBestCost => no need to take new task
-		
-		
-		// Code given by ASSITANT
-//		long distanceTask = task.pickupCity.distanceUnitsTo(task.deliveryCity);
-//		long distanceSum = distanceTask
-//				+ currentCity.distanceUnitsTo(task.pickupCity);
-//		double marginalCost = Measures.unitsToKM(distanceSum
-//				* vehicle.costPerKm());
-//
-//		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
-//		double bid = ratio * marginalCost;
-//
-//		return (long) Math.round(bid);
+
 	}
 	
 	
@@ -221,17 +192,18 @@ public class AuctionTemplate implements AuctionBehavior {
     	System.out.println("Generate Plan");
         long time_start = System.currentTimeMillis();
 
-       // Plan is already created by the askPrice()
-       // Best plan is myBestPlan
-       // Best cost is myBestCost
+        // Have to re-compute the best plan
+        List<Task> t = new ArrayList<Task>(tasks);
+        PickupDeliveryProblem pdp = new PickupDeliveryProblem(vehicles, t);
+        pdp.StochasticLocalSearch();
+        A bestPlan = pdp.getBestA();
         
         List<Plan> plans = new ArrayList<Plan>();
-        
         List<City> cities = new ArrayList<City>();
 
         for (Vehicle v : vehicles){
         	City homeCity = v.homeCity();
-        	LinkedList<Task_> tasks_ = myBestPlan.getTasksOfVehicle(v);
+        	LinkedList<Task_> tasks_ = bestPlan.getTasksOfVehicle(v);
         	if (tasks_ != null) {
         		Plan plan = makePlan(homeCity, tasks_);
        			plans.add(plan);
