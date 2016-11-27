@@ -24,7 +24,7 @@ public class PickupDeliveryProblem {
 	
 	
 	
-	private List<Vehicle> mVehicles;
+	private List<Vehicle_> mVehicles;
 	//private TaskSet mTasks;
 	private List<Task> mTasks ;
 	
@@ -42,16 +42,15 @@ public class PickupDeliveryProblem {
 	 * @param vehicles: all vehicles
 	 * @param tasks: all tasks
 	 */
-	public PickupDeliveryProblem(List<Vehicle> vehicles, List<Task> tasks){
-		this.mVehicles = new ArrayList<Vehicle>(vehicles);
-		//this.mTasks = tasks;
+	public PickupDeliveryProblem(List<Vehicle_> vehicles, List<Task> tasks){
+		this.mVehicles = new ArrayList<Vehicle_>(vehicles);
 		this.mCost = Double.MAX_VALUE;
 		this.mBestA = null;
 		this.mTasks = new ArrayList<Task>(tasks);
 	}
 	
-	public PickupDeliveryProblem(List<Vehicle> vehicles){
-		this.mVehicles = new ArrayList<Vehicle>(vehicles);
+	public PickupDeliveryProblem(List<Vehicle_> vehicles){
+		this.mVehicles = new ArrayList<Vehicle_>(vehicles);
 		this.mTasks = new ArrayList<Task>();
 		this.mCost = Double.MAX_VALUE;
 		this.mBestA = null;
@@ -63,7 +62,7 @@ public class PickupDeliveryProblem {
 	
 	public double getCost() { return this.mCost; }
 	
-	public List<Vehicle> getVehicle() {return this.mVehicles;}
+	public List<Vehicle_> getVehicle() {return this.mVehicles;}
 	
 	// Use to add a new task each time we win a task from the auction
 	public PickupDeliveryProblem addNewTask(Task task){
@@ -128,10 +127,10 @@ public class PickupDeliveryProblem {
 		if (mTasks.isEmpty())
 			throw new IllegalArgumentException("There is no task for delivering");
 			
-		HashMap<Vehicle, LinkedList<Task_>> map = new HashMap<Vehicle, LinkedList<Task_>>();
-		HashMap<Vehicle, Integer> load = new HashMap<Vehicle, Integer>();
+		HashMap<Vehicle_, LinkedList<Task_>> map = new HashMap<Vehicle_, LinkedList<Task_>>();
+		HashMap<Vehicle_, Integer> load = new HashMap<Vehicle_, Integer>();
 		
-		for (Vehicle v : mVehicles) {
+		for (Vehicle_ v : mVehicles) {
 			map.put(v, new LinkedList<Task_>());
 			load.put(v, 0);
 		}
@@ -139,10 +138,10 @@ public class PickupDeliveryProblem {
 		Random rd = new Random();
 		
 		for (Task t : mTasks){
-			Vehicle v = mVehicles.get(rd.nextInt(mVehicles.size()));
+			Vehicle_ v = mVehicles.get(rd.nextInt(mVehicles.size()));
 			int i = 0;
   			
-			while (load.get(v) + t.weight > v.capacity()){
+			while (load.get(v) + t.weight > v.getVehicle().capacity()){
   				v = mVehicles.get(rd.nextInt(mVehicles.size()));
  				if(i>10) {
  					throw new IllegalArgumentException("no vehicle can carry this task.");
@@ -215,7 +214,7 @@ public class PickupDeliveryProblem {
 		ArrayList<A> plans = new ArrayList<A>();
 
 		Random rd = new Random();
-		Vehicle vehicle = null;
+		Vehicle_ vehicle = null;
 	
 		while (true){ // Find a vehicle that has a task
 			vehicle = this.mVehicles.get(rd.nextInt(this.mVehicles.size()));
@@ -225,9 +224,9 @@ public class PickupDeliveryProblem {
 		}
 		
 		//Applying the changing vehicle operator
-		for (Vehicle v : this.mVehicles){
+		for (Vehicle_ v : this.mVehicles){
 			//check if vehicle "v" can take the task of vehicle "vehicle" (weight compatible)
-			if ( (v != vehicle) && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight <= v.capacity())){
+			if ( (v != vehicle) && (old.getTasksOfVehicle(vehicle).get(0).getTask().weight <= v.getVehicle().capacity())){
 				A newA = ChangingVehicle(old, vehicle, v);
 				if ( (newA != null) && checkConstraint(newA)){
 					plans.add(newA);
@@ -251,7 +250,7 @@ public class PickupDeliveryProblem {
 	}
 	
 	// Move the 1st task of v1 and append to the head of v2
-	private A ChangingVehicle(A a, Vehicle v1, Vehicle v2){
+	private A ChangingVehicle(A a, Vehicle_ v1, Vehicle_ v2){
 		A newA = new A(a);
 		// There is no task on v1
 		if (newA.getTasksOfVehicle(v1)==null || newA.getTasksOfVehicle(v1).isEmpty())
@@ -278,7 +277,7 @@ public class PickupDeliveryProblem {
 	}
 	
 	
-	private A ChangingTaskOrder(A a, Vehicle v, int idx1, int idx2){
+	private A ChangingTaskOrder(A a, Vehicle_ v, int idx1, int idx2){
 		
 		A newA = new A(a);
 		
@@ -311,9 +310,9 @@ public class PickupDeliveryProblem {
 	// Method to check constraint...
 	private boolean checkConstraint(A a){
 		
-		for (Map.Entry<Vehicle, LinkedList<Task_>> entry : a.getMap().entrySet()){
+		for (Map.Entry<Vehicle_, LinkedList<Task_>> entry : a.getMap().entrySet()){
 
-			Vehicle vehicle = entry.getKey();
+			Vehicle_ vehicle = entry.getKey();
 			LinkedList<Task_> tasks = entry.getValue();
 			HashMap<Task, Integer> map = new HashMap<Task, Integer>();
 			
@@ -341,7 +340,7 @@ public class PickupDeliveryProblem {
 					} 
 				}
 
-				if (weight > vehicle.capacity())
+				if (weight > vehicle.getVehicle().capacity())
 					return false;
 			}
 		}

@@ -99,7 +99,9 @@ public class AuctionTemplate implements AuctionBehavior {
 //		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
 //		this.random = new Random(seed);
 		
-		ArrayList<Vehicle> myVehicles = new ArrayList<Vehicle>(agent.vehicles());
+		ArrayList<Vehicle_> myVehicles = new ArrayList<Vehicle_>();
+		for (Vehicle v : agent.vehicles())
+			myVehicles.add(new Vehicle_(v, v.homeCity()));
 		
 		System.out.println("[setup] myVehicles: " + myVehicles);
 		
@@ -168,6 +170,10 @@ public class AuctionTemplate implements AuctionBehavior {
 					closest = Math.max(bid_prime, opponentBid)-Math.min(bid_prime, opponentBid);
 				}		
 			}
+			// Set all home city of all vehicle of opponent to opponentBeginCity
+			for (Vehicle_ v : opponentBestPDP.getVehicle())
+				v.setHomeCity(opponentBeginCity);
+			
 			// Suppose that the opponent compute/update his bid = marginalCost*ratio
 			this.opponentRatio = opponentBid / (opponentBeginCity.distanceTo(previous.pickupCity) + previous.pathLength())*costperkm;
 		}
@@ -223,20 +229,23 @@ public class AuctionTemplate implements AuctionBehavior {
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
     	System.out.println("Generate Plan");
         long time_start = System.currentTimeMillis();
+        List<Vehicle_> myVehicles = new ArrayList<Vehicle_>();
+        for (Vehicle v : vehicles)
+        	myVehicles.add(new Vehicle_(v, v.homeCity()));
         
         System.out.println("Number of tasks that we won: "+ tasks.size());
 
         // Have to re-compute the best plan
         List<Task> t = new ArrayList<Task>(tasks);
-        PickupDeliveryProblem pdp = new PickupDeliveryProblem(vehicles, t);
+        PickupDeliveryProblem pdp = new PickupDeliveryProblem(myVehicles, t);
         pdp.StochasticLocalSearch();
         A bestPlan = pdp.getBestA();
         
         List<Plan> plans = new ArrayList<Plan>();
         List<City> cities = new ArrayList<City>();
 
-        for (Vehicle v : vehicles){
-        	City homeCity = v.homeCity();
+        for (Vehicle_ v : myVehicles){
+        	City homeCity = v.getHomeCity();
         	LinkedList<Task_> tasks_ = bestPlan.getTasksOfVehicle(v);
         	if (tasks_ != null) {
         		Plan plan = makePlan(homeCity, tasks_);

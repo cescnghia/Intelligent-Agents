@@ -25,41 +25,41 @@ public class A {
 	      Vehicle 3 have to pick up and deliver task D
 	 */
 
-	private HashMap<Vehicle, LinkedList<Task_>> mVehicleTasks;
-	private List<Vehicle> mVehicles = new ArrayList<Vehicle>();
+	private HashMap<Vehicle_, LinkedList<Task_>> mVehicleTasks;
+	private List<Vehicle_> mVehicles = new ArrayList<Vehicle_>();
 	
 	
 	/*----------CONSTRUCTOR-----------*/
 	
-	public A(HashMap<Vehicle, LinkedList<Task_>> map){
+	public A(HashMap<Vehicle_, LinkedList<Task_>> map){
 		this.mVehicleTasks = map;
 		this.mVehicles.addAll(map.keySet());
 	}
 	
 	public A(A that){
 		this.mVehicles = that.mVehicles;
-		this.mVehicleTasks = new HashMap<Vehicle, LinkedList<Task_>>(that.mVehicleTasks);
+		this.mVehicleTasks = new HashMap<Vehicle_, LinkedList<Task_>>(that.mVehicleTasks);
 	}
 	
-	public A(ArrayList<Vehicle> vehicles){
-		for (Vehicle v : vehicles)
+	public A(ArrayList<Vehicle_> vehicles){
+		for (Vehicle_ v : vehicles)
 			mVehicleTasks.put(v, new LinkedList<Task_>());
 		this.mVehicles = vehicles;
 	}
 	
 	/*----------GETTER-----------*/
 	
-	public List<Vehicle> getVehicles() { return this.mVehicles ; }
+	public List<Vehicle_> getVehicles() { return this.mVehicles ; }
 	
-	public HashMap<Vehicle, LinkedList<Task_>> getMap() { return this.mVehicleTasks; }
+	public HashMap<Vehicle_, LinkedList<Task_>> getMap() { return this.mVehicleTasks; }
 	
-	public LinkedList<Task_> getTasksOfVehicle(Vehicle v){ return this.mVehicleTasks.get(v); }
+	public LinkedList<Task_> getTasksOfVehicle(Vehicle_ v){ return this.mVehicleTasks.get(v); }
 	
 	
 	/*------ALL TRANSFORMATIONS METHODS------*/
 	
 	public void updateTask(Task task){
-		for(Vehicle v: this.mVehicles){
+		for(Vehicle_ v: this.mVehicles){
 			System.out.println(v);
 			LinkedList<Task_> tasks_ = this.mVehicleTasks.get(v);
 			for (int i = 0 ; i < tasks_.size(); i++){
@@ -74,21 +74,21 @@ public class A {
 	}
 	
 	// Add a task to the head
-	public void addTaskForVehicle(Task_ a, Vehicle v){
+	public void addTaskForVehicle(Task_ a, Vehicle_ v){
 		LinkedList<Task_> tasks = new LinkedList<Task_>(mVehicleTasks.get(v));
 		tasks.addFirst(a);
 		this.mVehicleTasks.put(v, tasks);
 	}
 	
 	// Remove a specific task 
-	public void removeTaskFromVehicle(Task_ a, Vehicle v){
+	public void removeTaskFromVehicle(Task_ a, Vehicle_ v){
 		LinkedList<Task_> tasks = new LinkedList<Task_>(mVehicleTasks.get(v));
 		tasks.remove(a);
 		this.mVehicleTasks.put(v, tasks);
 	}
 	
 	// Change order of 2 tasks
-	public void changeOrderOfTwoTasks(int idx1, int idx2, Vehicle v){
+	public void changeOrderOfTwoTasks(int idx1, int idx2, Vehicle_ v){
 		LinkedList<Task_> tasks = mVehicleTasks.get(v);
 
 		Task_ task1 = tasks.get(idx1);
@@ -104,13 +104,13 @@ public class A {
 	public double cost(){
 		double cost = 0.0;
 		
-		for (Vehicle v : mVehicleTasks.keySet()){
+		for (Vehicle_ v : mVehicleTasks.keySet()){
 			
 			if (mVehicleTasks.get(v).isEmpty()) //no task for this vehicle => continue
 				continue;
 			
 			// Cost for going to pickup a task at the beginning
-			cost += (v.homeCity().distanceTo(mVehicleTasks.get(v).getFirst().getTask().pickupCity))*v.costPerKm();
+			cost += (v.getHomeCity().distanceTo(mVehicleTasks.get(v).getFirst().getTask().pickupCity))*v.getVehicle().costPerKm();
 			LinkedList<Task_> tasks = this.mVehicleTasks.get(v);
 			
 			for (int i = 0 ; i < tasks.size() - 1 ; i++ ){
@@ -118,13 +118,13 @@ public class A {
 				Task_ nextTask = tasks.get(i+1);
 				
 				if (task.getAction() == Action.PICKUP && nextTask.getAction() == Action.PICKUP){
-					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity)*v.costPerKm();
+					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().pickupCity)*v.getVehicle().costPerKm();
 				} else if (task.getAction() == Action.DELIVERY && nextTask.getAction() == Action.PICKUP){
-					cost += task.getTask().deliveryCity.distanceTo(nextTask.getTask().pickupCity)*v.costPerKm();
+					cost += task.getTask().deliveryCity.distanceTo(nextTask.getTask().pickupCity)*v.getVehicle().costPerKm();
 				} else if (task.getAction() == Action.PICKUP && nextTask.getAction() == Action.DELIVERY){
-					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().deliveryCity)*v.costPerKm();
+					cost += task.getTask().pickupCity.distanceTo(nextTask.getTask().deliveryCity)*v.getVehicle().costPerKm();
 				} else {
-					cost += task.getTask().deliveryCity.distanceTo(nextTask.getTask().deliveryCity)*v.costPerKm();
+					cost += task.getTask().deliveryCity.distanceTo(nextTask.getTask().deliveryCity)*v.getVehicle().costPerKm();
 				}
 			}
 		}	
