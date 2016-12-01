@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-
-<history configuration="/Users/Cescnghia/Library/Mobile Documents/com~apple~CloudDocs/Master I/Intelligent Agents/Project/centralized/config/centralized.xml">
-	<agents>
-		<agent name="centralized-main">
-			<vehicle name="Vehicle 1"/>
-			<vehicle name="Vehicle 2"/>
-			<vehicle name="Vehicle 3"/>
-			<vehicle name="Vehicle 4"/>
