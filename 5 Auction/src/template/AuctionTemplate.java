@@ -41,10 +41,10 @@ public class AuctionTemplate implements AuctionBehavior {
     
     private double myRatio = 0.85;
     private double opponentRatio = 0;
-
 	private double maxRatio = 2;
 	private double minRatio = 0.5;
     private int round = 0;
+    private int won = 0;
     
     private List<Long> myBids = new ArrayList<Long>();
     private List<Long> opponentBids = new ArrayList<Long>();
@@ -53,22 +53,16 @@ public class AuctionTemplate implements AuctionBehavior {
 	private PickupDeliveryProblem myBestPDP;
 	private double myBestCost = Double.MAX_VALUE;
 	private A myBestPlan = null;
-	
-	private PickupDeliveryProblem opponentBestPDP;
-	private double opponentBestCost = Double.MAX_VALUE;
-	private A opponentBestPlan = null;
-	
-	// Parameters intermedia
-	// Using to comptute new cost and new plan in askPrice() method
 	private PickupDeliveryProblem myNewPDP;
 	private double myNewCost = Double.MAX_VALUE;
 	private A myNewPlan = null;
 	
+	private PickupDeliveryProblem opponentBestPDP;
+	private double opponentBestCost = Double.MAX_VALUE;
+	private A opponentBestPlan = null;
 	private PickupDeliveryProblem opponentNewPDP;
 	private double opponentNewCost = Double.MAX_VALUE;
 	private A opponentNewPlan = null;
-	
-	private Map<Integer, Ennemy> mEnnemies = new HashMap<Integer, Ennemy>();
 
 
 	@Override
@@ -99,11 +93,10 @@ public class AuctionTemplate implements AuctionBehavior {
 //		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
 //		this.random = new Random(seed);
 		
+		
 		ArrayList<Vehicle_> myVehicles = new ArrayList<Vehicle_>();
 		for (Vehicle v : agent.vehicles())
 			myVehicles.add(new Vehicle_(v, v.homeCity()));
-		
-		System.out.println("[setup] myVehicles: " + myVehicles);
 		
 		this.myBestPDP = new PickupDeliveryProblem(myVehicles);
 		this.opponentBestPDP = new PickupDeliveryProblem(myVehicles);
@@ -117,18 +110,18 @@ public class AuctionTemplate implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		
-		System.out.println("Number of agent is: "+bids.length);
 		long myBid = bids[agent.id()];
 		long opponentBid = bids[1-agent.id()];
 	
 		if (winner == agent.id()) { // We win this task
+			won++;
 			System.out.println("[AuctionTemplate.auctionResult] we win the task: " + previous);
 			// we win for the task
 			// store the value of newCost and newPlan that we have computed in the method askPrice()
 			this.myBestPDP = this.myNewPDP;
 		    this.myBestPlan = this.myNewPlan;
 		    this.myBestCost = this.myNewCost;
-		    
+		   
 		    
 		    // we win, we try to increase the ratio for having more profit in next auction
 		    // idea is we add a very small number to myRatio
@@ -137,7 +130,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		    opponentRatio -=  opponentRatio*((double)myBid / (double)opponentBid);
 
 			
-		} else { // Do Something
+		} else {
 			System.out.println("[AuctionTemplate.auctionResult] we lose the task: " + previous);
 			// analyze the plan of opponent
 			// do some strategy....
@@ -156,7 +149,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		opponentRatio = Math.min(opponentRatio,maxRatio);
 		opponentRatio = Math.max(opponentRatio, minRatio);
 		
-		// try to guess home city of the vehicle that opponent use for compute his first bid
+		// try to guess the home city of the vehicle that opponent use for computing his first bid
 		City opponentBeginCity = null;
 		//we looking for the closest value to opponentBid
 		int costperkm = agent.vehicles().get(0).costPerKm();
@@ -211,13 +204,13 @@ public class AuctionTemplate implements AuctionBehavior {
 			if (myBid < 0) // We want our bid is a positive number
 				myBid = 1;
 			
-			if (round == 1) // we still not guess opponentRatio
+			if (round == 1) // we can not guess opponentRatio
 				opponentBid = myBid;	
 			
 			
 			// just give a bid smaller than the bid of the opponent
 			if (opponentBid < myBid)
-				myBid = opponentBid - 1;
+				myBid = opponentBid - 1 ;
 			
 			return  (long) Math.round(myBid);
 
@@ -233,7 +226,7 @@ public class AuctionTemplate implements AuctionBehavior {
         for (Vehicle v : vehicles)
         	myVehicles.add(new Vehicle_(v, v.homeCity()));
         
-        System.out.println("Number of tasks that we won: "+ tasks.size());
+        System.out.println("Number of tasks that we won: "+ won);
 
         // Have to re-compute the best plan
         List<Task> t = new ArrayList<Task>(tasks);
